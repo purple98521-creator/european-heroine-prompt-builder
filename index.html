@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ヨーロッパの女帝と王妃たち ヒロインプロンプトビルダー</title>
+<style>
+  :root{
+    --title-font:"HGエレガント平成明朝体W3","HG Elegant Heisei Mincho W3","Hiragino Mincho ProN","Yu Mincho",serif;
+    --body-font:"Hiragino Kaku Gothic ProN","Yu Gothic Medium","Yu Gothic",Meiryo,"Helvetica Neue",Arial,sans-serif;
+    --bg:#fdf0f4;
+    --panel:#fffbfc;
+    --ink:#4a2438;
+    --sub:#93707e;
+    --gold:#cbab6e;
+    --gold-deep:#a9854a;
+    --magenta:#c2185b;
+    --magenta-deep:#94103f;
+    --rose:#e07ba0;
+    --line:#f3d9e4;
+    --chip:#fdf3f7;
+    --chip-active:#c2185b;
+    --chip-active-ink:#fff5f8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--body-font);
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.7;
+  }
+  header{
+    padding:28px 20px 18px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fff8ec,var(--bg));
+  }
+  header h1{
+    margin:0 0 6px;
+    font-family:var(--title-font);
+    font-size:1.6rem;
+    letter-spacing:.04em;
+    color:var(--magenta-deep);
+  }
+  header p{
+    margin:0;
+    color:var(--sub);
+    font-size:.85rem;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:20px 16px 40px;}
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:22px;
+  }
+  section.card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(148,16,63,.05);
+  }
+  section.card h2{
+    margin:0 0 4px;
+    font-family:var(--title-font);
+    font-size:1.08rem;
+    color:var(--magenta-deep);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  section.card .desc{
+    color:var(--sub);
+    font-size:.82rem;
+    margin:2px 0 10px;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    border:1px solid var(--gold);
+    background:var(--chip);
+    color:var(--ink);
+    border-radius:999px;
+    padding:6px 13px;
+    font-size:.82rem;
+    cursor:pointer;
+    transition:background .15s,color .15s,border-color .15s;
+    line-height:1.3;
+  }
+  .chip:hover{background:#f7e0ea;border-color:var(--magenta);}
+  .chip.active{background:var(--chip-active);color:var(--chip-active-ink);border-color:var(--chip-active);}
+  .chip.star::after{content:" ★";color:var(--gold-deep);}
+  .chip.active.star::after{color:#ffe3ba;}
+  .mini-random{
+    border:none;background:none;color:var(--sub);
+    font-size:.72rem;cursor:pointer;text-decoration:underline;
+    white-space:nowrap;
+  }
+  .mini-random:hover{color:var(--magenta-deep);}
+  input[type=text]{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;
+    font-size:.85rem;font-family:inherit;background:#fffdfb;
+  }
+  .field{margin-top:8px;}
+  .field label{font-size:.78rem;color:var(--sub);display:block;margin-bottom:3px;}
+  button.big{
+    border:1px solid var(--magenta);
+    background:var(--magenta);
+    color:#fff5f8;
+    padding:9px 18px;
+    border-radius:999px;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  button.big.ghost{
+    background:transparent;color:var(--gold-deep);border-color:var(--gold);
+  }
+  button.big:hover{opacity:.85;}
+  section.output{
+    background:linear-gradient(180deg,#fff8ec,var(--panel));
+    border:2px solid var(--gold);border-radius:10px;
+    padding:16px 18px;margin-bottom:16px;
+  }
+  section.output h2{margin:0 0 4px;font-family:var(--title-font);font-size:1.08rem;color:var(--magenta-deep);}
+  textarea#promptOut{
+    width:100%;min-height:140px;resize:vertical;
+    border:1px solid var(--line);border-radius:6px;padding:8px;
+    font-size:.85rem;font-family:inherit;background:#fff;
+  }
+  .out-controls{display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:8px;}
+  .charcount{font-size:.75rem;color:var(--sub);}
+  .out-buttons{display:flex;gap:8px;flex-wrap:wrap;}
+  .out-buttons button{
+    border:1px solid var(--gold-deep);background:#fff;color:var(--gold-deep);
+    padding:6px 12px;border-radius:999px;font-size:.78rem;cursor:pointer;
+  }
+  .out-buttons button.primary{background:var(--magenta);border-color:var(--magenta);color:#fff5f8;}
+</style>
+</head>
+<body>
+<header>
+  <h1>ヨーロッパの女帝と王妃たち ヒロインプロンプトビルダー</h1>
+  <p>マリー・アントワネット、マリア・テレジア、エカチェリーナ2世、ジョゼフィーヌ、エリザベート（シシィ）を対象にした、AI画像生成用プロンプトの組み立てツールです。（18〜19世紀ヨーロッパ編／全13人シリーズより5人）</p>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button class="big" id="btnRecommend">◎ おすすめの設定にまとめて合わせる</button>
+    <button class="big ghost" id="btnRandomAll">全項目をおまかせで選ぶ</button>
+    <button class="big ghost" id="btnResetAll">選び直す</button>
+  </div>
+
+  <p class="desc" style="text-align:center;margin-top:0;">画風・デフォルメ・色調・躍動感・参照画像・アングル・手の扱い・装飾・光・文字は保たれます。ヒロインを選び直すと、装束・色目・モチーフ・表情だけが初期値に入れ替わります。（5人 × 3場面 = 全15パターン）</p>
+
+  <div id="sections"></div>
+
+  <section class="output">
+    <h2>組み上がったプロンプト</h2>
+    <textarea id="promptOut" readonly></textarea>
+    <div class="out-controls">
+      <span class="charcount" id="charCount">0 文字</span>
+      <div class="out-buttons">
+        <button id="btnCopy" class="primary">コピーする</button>
+        <button id="btnBatch">15人分をまとめて書き出す</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------- データ ---------- */
+
+const HEROINES = [
+  {id:'ma1', group:'marie', label:'マリー・アントワネット（ヴェルサイユ本宮、王妃としての正装）',
+   base:'Marie Antoinette, Queen of France, in full formal splendor at the Palace of Versailles',
+   defCostume:'ma_c1', defPalette:'p_rose', defExpr:'e_noble', defMotifs:['mo_pearl','mo_fan']},
+  {id:'ma2', group:'marie', label:'マリー・アントワネット（プティ・トリアノン、牧歌趣味の日々）',
+   base:'Marie Antoinette at the Petit Trianon, in her pastoral retreat away from the court',
+   defCostume:'ma_c3', defPalette:'p_mint', defExpr:'e_bright', defMotifs:['mo_sheep','mo_bird']},
+  {id:'ma3', group:'marie', label:'マリー・アントワネット（仮面舞踏会の宵）',
+   base:'Marie Antoinette at a masked ball, a night of disguise and intrigue',
+   defCostume:'ma_c4', defPalette:'p_lilac', defExpr:'e_fan', defMotifs:['mo_ribbon','mo_cards']},
+  {id:'jo1', group:'josephine', label:'ジョゼフィーヌ（戴冠式後、皇后としての正装）',
+   base:'Empress Josephine of France, in full imperial state dress after her coronation',
+   defCostume:'jo_c2', defPalette:'p_crimson', defExpr:'e_calm', defMotifs:['mo_bee','mo_laurel']},
+  {id:'jo2', group:'josephine', label:'ジョゼフィーヌ（マルメゾン、バラ園の午後）',
+   base:'Empress Josephine in the rose gardens of Malmaison on a quiet afternoon',
+   defCostume:'jo_c4', defPalette:'p_white', defExpr:'e_smile', defMotifs:['mo_rose','mo_swan']},
+  {id:'jo3', group:'josephine', label:'ジョゼフィーヌ（総裁政府時代、ディレクトワールの薄衣）',
+   base:'Josephine in the Directoire years, in the diaphanous fashion of post-revolutionary Paris',
+   defCostume:'jo_c3', defPalette:'p_navy', defExpr:'e_pensive', defMotifs:['mo_pearl2','mo_peacock']},
+  {id:'mt1', group:'maria', label:'マリア・テレジア（若き女帝、即位直後）',
+   base:'Maria Theresa, Empress of Austria, newly ascended to the Habsburg throne',
+   defCostume:'mt_c1', defPalette:'p_habsburg', defExpr:'e_noble', defMotifs:['mo_eagle','mo_crown_mt']},
+  {id:'mt2', group:'maria', label:'マリア・テレジア（シェーンブルン、多くの子に囲まれて）',
+   base:'Maria Theresa, Empress of Austria, surrounded by her many children at Schönbrunn Palace',
+   defCostume:'mt_c2', defPalette:'p_ivory', defExpr:'e_smile', defMotifs:['mo_children']},
+  {id:'mt3', group:'maria', label:'マリア・テレジア（晩年、喪の年月）',
+   base:'Maria Theresa in her later years, in the long mourning that followed her husband\'s death',
+   defCostume:'mt_c3', defPalette:'p_black', defExpr:'e_shadow', defMotifs:['mo_blackfan']},
+  {id:'ca1', group:'catherine', label:'エカチェリーナ2世（戴冠式、帝冠を戴いて）',
+   base:'Catherine the Great, Empress of Russia, crowned in the full splendor of her coronation',
+   defCostume:'ca_c1', defPalette:'p_imperial_ru', defExpr:'e_noble', defMotifs:['mo_crownRu','mo_fireworks']},
+  {id:'ca2', group:'catherine', label:'エカチェリーナ2世（クーデターの夜、近衛の軍服で）',
+   base:'Catherine the Great on the night of the coup, dressed in the uniform of the imperial guard',
+   defCostume:'ca_c2', defPalette:'p_navy', defExpr:'e_gaze', defMotifs:['mo_horse']},
+  {id:'ca3', group:'catherine', label:'エカチェリーナ2世（冬宮殿、書物に囲まれて）',
+   base:'Catherine the Great at the Winter Palace, surrounded by books and the ideas of the Enlightenment',
+   defCostume:'ca_c4', defPalette:'p_imperial_ru', defExpr:'e_calm', defMotifs:['mo_book']},
+  {id:'si1', group:'sisi', label:'エリザベート（宮廷舞踏会、星の髪飾り）',
+   base:'Empress Elisabeth of Austria at a court ball, diamond stars woven through her famously long hair',
+   defCostume:'si_c1', defPalette:'p_ivory', defExpr:'e_gaze', defMotifs:['mo_star']},
+  {id:'si2', group:'sisi', label:'エリザベート（ハンガリーの草原、乗馬服）',
+   base:'Empress Elisabeth riding across the Hungarian plain in a tailored riding habit',
+   defCostume:'si_c2', defPalette:'p_violet', defExpr:'e_bright', defMotifs:['mo_horse2']},
+  {id:'si3', group:'sisi', label:'エリザベート（晩年、喪の黒衣）',
+   base:'Empress Elisabeth in her later years, dressed in unrelenting black',
+   defCostume:'si_c3', defPalette:'p_black', defExpr:'e_shadow', defMotifs:['mo_mirror']},
+];
+
+const COSTUMES = [
+ {id:'ma_c1', group:'marie', label:'ローブ・ア・ラ・フランセーズ（大パニエの宮廷正装）', prompt:'a grand robe à la française with wide panniers, the full court dress of Versailles'},
+ {id:'ma_c2', group:'marie', label:'ローブ・ア・ラ・ポロネーズ（トリアノン風の丈上げドレス）', prompt:'a robe à la polonaise with a draped and gathered overskirt, in the Trianon style'},
+ {id:'ma_c3', group:'marie', label:'シュミーズ・ア・ラ・レーヌ（白いモスリンの牧歌ドレス）', prompt:'a chemise à la reine, a simple flowing white muslin dress'},
+ {id:'ma_c4', group:'marie', label:'仮面舞踏会のドミノとマント', prompt:'a masquerade domino mask and a flowing cloak'},
+ {id:'jo_c1', group:'josephine', label:'アンピール・ドレス（宮廷正装、トレーンとマント）', prompt:'an Empire-waist gown of the imperial court, with a long train and a velvet mantle'},
+ {id:'jo_c2', group:'josephine', label:'戴冠式のマント（金の蜂の刺繍と貂の毛皮）', prompt:'a coronation mantle embroidered with golden bees and trimmed with ermine'},
+ {id:'jo_c3', group:'josephine', label:'ディレクトワールの薄衣（透けるハイウエストのモスリン）', prompt:'a Directoire-style high-waisted gown of nearly transparent white muslin'},
+ {id:'jo_c4', group:'josephine', label:'庭園用の軽いモスリンドレス', prompt:'a light muslin day dress suited for the garden'},
+ {id:'mt_c1', group:'maria', label:'戴冠衣装（黒テンの毛皮とダイヤモンドの冠）', prompt:'the coronation robes of the Habsburg monarchy, trimmed with black ermine and crowned with diamonds'},
+ {id:'mt_c2', group:'maria', label:'宮廷正装のロココドレス（大パニエ）', prompt:'a formal Rococo court gown with wide panniers, in the Viennese imperial style'},
+ {id:'mt_c3', group:'maria', label:'晩年の喪服（黒い衣装）', prompt:'the plain black mourning dress she wore for the rest of her life'},
+ {id:'mt_c4', group:'maria', label:'軍服風の乗馬服（若き女帝の威厳）', prompt:'a military-inspired riding habit, asserting her authority as a young empress'},
+ {id:'ca_c1', group:'catherine', label:'戴冠式のマントと帝冠（ロマノフの威光）', prompt:'the coronation mantle and imperial crown of the Romanovs'},
+ {id:'ca_c2', group:'catherine', label:'近衛連隊の軍服（クーデターの夜）', prompt:'the uniform of an imperial guards regiment, worn on the night of the coup'},
+ {id:'ca_c3', group:'catherine', label:'私室の化粧着', prompt:'a loose, richly embroidered dressing gown for private hours'},
+ {id:'ca_c4', group:'catherine', label:'宮廷正装のドレス（冬宮殿）', prompt:'a formal court gown of heavy brocade, worn at the Winter Palace'},
+ {id:'si_c1', group:'sisi', label:'宮廷舞踏会のドレス（星の髪飾り）', prompt:'a formal ball gown of tulle, with diamond stars woven into her hair'},
+ {id:'si_c2', group:'sisi', label:'乗馬服（ハンガリーの草原）', prompt:'a tailored dark riding habit for riding across the Hungarian plain'},
+ {id:'si_c3', group:'sisi', label:'喪の黒衣（晩年）', prompt:'the unrelenting black mourning dress of her later years'},
+ {id:'si_c4', group:'sisi', label:'ハンガリー王妃の戴冠衣装', prompt:'the Hungarian coronation gown, worn as Queen of Hungary'},
+];
+
+const PALETTES = [
+ {id:'p_blue', label:'パウダーブルー', prompt:'powder blue silk', star:'marie'},
+ {id:'p_rose', label:'ローズピンク', prompt:'rose pink silk', star:'marie'},
+ {id:'p_ivory', label:'アイボリーと金', prompt:'ivory silk trimmed with gold', star:'both'},
+ {id:'p_mint', label:'ミントグリーン', prompt:'soft mint green silk', star:'marie'},
+ {id:'p_lilac', label:'ライラック', prompt:'pale lilac silk', star:'marie'},
+ {id:'p_crimson', label:'深紅とゴールド', prompt:'deep crimson velvet and gold', star:'josephine'},
+ {id:'p_white', label:'純白', prompt:'pure white muslin', star:'josephine'},
+ {id:'p_navy', label:'ネイビーと銀', prompt:'navy silk and silver thread', star:'josephine'},
+ {id:'p_habsburg', label:'ハプスブルクの黒と金', prompt:'Habsburg black and gold', star:'maria'},
+ {id:'p_imperial_ru', label:'帝政ロシアの深緑と金', prompt:'imperial Russian deep green and gold', star:'catherine'},
+ {id:'p_violet', label:'すみれ色', prompt:'soft violet silk', star:'sisi'},
+ {id:'p_black', label:'喪の黒', prompt:'unrelenting black silk', star:'sisi'},
+];
+
+const PATTERNS = [
+ {id:'pt_floral', group:'marie', label:'小花柄のシルク（プティ・フルーレット）', prompt:'a silk brocade sprigged with tiny flowers'},
+ {id:'pt_ribbon', group:'marie', label:'リボンと蝶結びの連続文様', prompt:'a repeating pattern of ribbons and bows'},
+ {id:'pt_rocaille', group:'marie', label:'ロカイユの装飾模様', prompt:'ornate rocaille scrollwork patterns'},
+ {id:'pt_chinoiserie', group:'marie', label:'シノワズリ（中国趣味の意匠）', prompt:'chinoiserie motifs in the fashionable exotic taste'},
+ {id:'pt_lace', group:'both', label:'繊細なレース', prompt:'delicate lace trim throughout'},
+ {id:'pt_laurel', group:'josephine', label:'月桂樹の縁飾り', prompt:'a border of laurel leaves'},
+ {id:'pt_bee', group:'josephine', label:'金の蜂の紋章', prompt:'the golden bee emblem of the empire'},
+ {id:'pt_greekkey', group:'josephine', label:'ギリシャ風の縁取り文様（グリークキー）', prompt:'a Greek key border pattern'},
+ {id:'pt_palmette', group:'josephine', label:'金糸のパルメット刺繍', prompt:'gold-thread palmette embroidery'},
+ {id:'pt_ermine', group:'both', label:'貂の毛皮の縁取り', prompt:'a trim of ermine fur'},
+ {id:'pt_eagle', group:'maria', label:'ハプスブルクの双頭の鷲の紋様', prompt:'the double-headed eagle emblem of the Habsburg monarchy'},
+ {id:'pt_romanov', group:'catherine', label:'ロマノフの帝冠文様', prompt:'the imperial Romanov crown motif'},
+ {id:'pt_diamondstar', group:'sisi', label:'星のダイヤモンド刺繍', prompt:'diamond star embroidery, as worn in her hair'},
+ {id:'pt_hungarian', group:'sisi', label:'ハンガリー風の刺繍', prompt:'Hungarian-inspired embroidery'},
+];
+
+const SCENES = [
+ {id:'sc1', label:'ヴェルサイユ宮殿、鏡の間', prompt:'in the Hall of Mirrors at the Palace of Versailles'},
+ {id:'sc2', label:'プティ・トリアノンの庭園', prompt:'in the gardens of the Petit Trianon'},
+ {id:'sc3', label:'化粧台の前', prompt:'before an ornate dressing table in her private chamber'},
+ {id:'sc4', label:'舞踏会の大広間', prompt:'in a grand ballroom mid-celebration'},
+ {id:'sc5', label:'馬車の中から外を眺める', prompt:'gazing out from within a gilded carriage'},
+ {id:'sc6', label:'バラ園（マルメゾン）', prompt:'in the rose garden of Malmaison'},
+ {id:'sc7', label:'戴冠式の大聖堂内', prompt:'inside the cathedral during a coronation ceremony'},
+ {id:'sc8', label:'書斎で書物と地球儀に囲まれて', prompt:'surrounded by books and a globe in a private study'},
+ {id:'sc9', label:'バルコニーから庭を見下ろす', prompt:'looking down over the gardens from a balcony'},
+ {id:'sc10', label:'羊飼い遊びの牧場（トリアノン風）', prompt:'in a rustic pastoral farm setting, playing at shepherdess'},
+ {id:'sc11', label:'シェーンブルン宮殿の大広間', prompt:'in the great hall of Schönbrunn Palace'},
+ {id:'sc12', label:'ホーフブルク宮殿の謁見室', prompt:'in the audience chamber of the Hofburg Palace'},
+ {id:'sc13', label:'冬宮殿（エルミタージュ）の舞踏会', prompt:'at a ball in the Winter Palace of the Hermitage'},
+ {id:'sc14', label:'ペテルゴフの庭園', prompt:'in the gardens of Peterhof'},
+ {id:'sc15', label:'ハンガリーの草原を馬で駆ける', prompt:'riding across the open plain of Hungary'},
+ {id:'sc16', label:'鏡の前で髪を結う', prompt:'before a large mirror, having her famously long hair dressed'},
+];
+
+const STYLES = [
+ {id:'st1', label:'やわらかなイラスト（コラージュ風）', prompt:'a soft collage-style illustration'},
+ {id:'st2', label:'華やかな商業イラスト', prompt:'a vivid commercial illustration style', def:true},
+ {id:'st3', label:'18世紀肖像画風（油絵）', prompt:'an 18th-century oil portrait style, in the manner of a court painter such as Vigée Le Brun'},
+ {id:'st4', label:'水彩と淡い光の絵', prompt:'a soft watercolor with delicate light'},
+ {id:'st5', label:'現代的なイラストレーション', prompt:'a contemporary digital illustration'},
+ {id:'st6', label:'写実的なポートレート', prompt:'a photorealistic portrait'},
+];
+
+const DEFORM = [
+ {id:'df1', label:'ひかえめ（写実寄り）', prompt:'a restrained, near-realistic level of stylization'},
+ {id:'df2', label:'ほどよく（半写実）', prompt:'a moderate, semi-realistic level of stylization', def:true},
+ {id:'df3', label:'しっかり（アニメ寄り）', prompt:'a strongly stylized, anime-leaning look'},
+];
+
+const TONE = [
+ {id:'tn1', label:'明るく華やか', prompt:'a bright, radiant overall color scheme, high in key with white and gold', def:true},
+ {id:'tn2', label:'落ち着いた', prompt:'a muted, subdued palette of quiet mid-tones'},
+ {id:'tn3', label:'陰影の強い', prompt:'strong chiaroscuro with deep shadow and rich color'},
+];
+
+const DYN = [
+ {id:'dy1', label:'静かに', prompt:'a calm, still composure'},
+ {id:'dy2', label:'流れる', prompt:'flowing movement in hair and fabric', def:true},
+ {id:'dy3', label:'大きく動く', prompt:'sweeping movement, with fabric and powder catching in the air'},
+];
+
+const FRAMING = [
+ {id:'fr1', label:'全身', prompt:'a full-body shot'},
+ {id:'fr2', label:'膝上', prompt:'a knee-length shot', def:true},
+ {id:'fr3', label:'胸から上', prompt:'a chest-up shot'},
+ {id:'fr4', label:'手元と袖', prompt:'a close shot of hands and sleeve, face not shown'},
+];
+
+const ANGLE = [
+ {id:'an1', label:'正面', prompt:'a front-facing angle'},
+ {id:'an2', label:'斜め45度', prompt:'a three-quarter angle'},
+ {id:'an3', label:'横顔', prompt:'a profile view'},
+ {id:'an4', label:'やや俯瞰', prompt:'a slightly high, downward-looking angle', def:true},
+ {id:'an5', label:'あおり', prompt:'a low, upward-looking angle'},
+];
+
+const HANDS = [
+ {id:'ha1', label:'片手で扇を持つ', prompt:'holding a folding fan in one hand', def:true},
+ {id:'ha2', label:'両手を前で重ねる', prompt:'both hands folded gently in front'},
+ {id:'ha3', label:'裾を軽くつまむ', prompt:'lightly gathering the hem of her skirt with one hand'},
+ {id:'ha4', label:'指定しない', prompt:''},
+];
+
+const EXPR = [
+ {id:'e_noble', label:'気高く近寄りがたい', prompt:'a noble, aloof expression'},
+ {id:'e_bright', label:'華やかで明るい', prompt:'a bright, radiant expression'},
+ {id:'e_fan', label:'扇で口元を隠して', prompt:'her mouth hidden behind a fan, a hint of a smile in her eyes'},
+ {id:'e_calm', label:'聡明で落ち着いた', prompt:'a composed, intelligent expression'},
+ {id:'e_smile', label:'微笑を含んで', prompt:'a faint, gentle smile'},
+ {id:'e_pensive', label:'物思いに沈んで', prompt:'a pensive, thoughtful expression'},
+ {id:'e_gaze', label:'こちらを見つめて', prompt:'gazing directly at the viewer'},
+ {id:'e_glance', label:'ふと振り返る', prompt:'glancing back over her shoulder'},
+ {id:'e_shadow', label:'翳りを帯びた', prompt:'a faint shadow of melancholy'},
+ {id:'e_modest', label:'優雅で控えめ', prompt:'graceful and modest'},
+];
+
+const FACE_REF = [
+ {id:'fri0', label:'参照画像を使わない', prompt:''},
+ {id:'fri1', label:'写真の顔をそのまま使う', prompt:'preserving the likeness of the reference photo as closely as possible'},
+ {id:'fri2', label:'本人に似せたイラストにする', prompt:'a recognisable likeness of the reference photo, reimagined as an illustration', def:true},
+ {id:'fri3', label:'雰囲気だけ', prompt:'only the general impression of the reference photo'},
+];
+
+const MAKEUP = [
+ {id:'mk1', label:'現代風の眉・自然な肌', prompt:'natural modern brows and skin', def:true},
+ {id:'mk2', label:'18世紀風の白粉メイク（頬紅と付けほくろ）', prompt:'18th-century white lead makeup with rouged cheeks and a beauty mark'},
+];
+
+const FEATURES = [
+ {id:'ft1', label:'透明感のある肌', prompt:'luminous translucent skin', def:true},
+ {id:'ft2', label:'鼻筋の通った端正な顔立ち', prompt:'a straight, elegant nose and refined features', def:true},
+ {id:'ft3', label:'切れ長の目', prompt:'long, narrow almond eyes'},
+ {id:'ft4', label:'ふっくらとした頬', prompt:'a softly rounded face with full cheeks'},
+ {id:'ft5', label:'陶器のような肌', prompt:'smooth porcelain skin', def:true},
+];
+
+const MOTIFS = [
+ {id:'mo_rose', group:'both', label:'バラ', prompt:'a trailing rose blossom'},
+ {id:'mo_pearl', group:'marie', label:'真珠の首飾り', prompt:'a long strand of pearls'},
+ {id:'mo_sheep', group:'marie', label:'羊（パストラルな遊び）', prompt:'a small lamb, part of a pastoral game'},
+ {id:'mo_fan', group:'marie', label:'扇', prompt:'a painted folding fan'},
+ {id:'mo_ribbon', group:'marie', label:'リボン', prompt:'trailing silk ribbons'},
+ {id:'mo_bird', group:'marie', label:'小鳥', prompt:'a small songbird'},
+ {id:'mo_cards', group:'marie', label:'トランプ', prompt:'a scattered hand of playing cards'},
+ {id:'mo_cake', group:'marie', label:'小さなケーキ', prompt:'a small iced cake'},
+ {id:'mo_swan', group:'josephine', label:'白鳥', prompt:'a swan gliding on still water'},
+ {id:'mo_bee', group:'josephine', label:'金の蜂', prompt:'the golden bee, emblem of the empire'},
+ {id:'mo_laurel', group:'josephine', label:'月桂樹の冠', prompt:'a wreath of laurel leaves'},
+ {id:'mo_pearl2', group:'josephine', label:'真珠', prompt:'a delicate strand of pearls'},
+ {id:'mo_peacock', group:'josephine', label:'クジャクの羽根', prompt:'a peacock feather'},
+ {id:'mo_eagle', group:'maria', label:'双頭の鷲', prompt:'the double-headed eagle of the Habsburgs'},
+ {id:'mo_crown_mt', group:'maria', label:'ハプスブルクの王冠', prompt:'the crown of the Habsburg monarchy'},
+ {id:'mo_children', group:'maria', label:'大勢の子どもたち', prompt:'a great many children gathered around her'},
+ {id:'mo_blackfan', group:'maria', label:'黒い扇（喪の年月）', prompt:'a black mourning fan'},
+ {id:'mo_crownRu', group:'catherine', label:'帝冠（ロマノフ）', prompt:'the imperial crown of Russia'},
+ {id:'mo_fireworks', group:'catherine', label:'花火（宮廷の祝宴）', prompt:'fireworks bursting over the palace in celebration'},
+ {id:'mo_horse', group:'catherine', label:'白馬（クーデターの夜）', prompt:'a white horse, as ridden on the night of the coup'},
+ {id:'mo_book', group:'catherine', label:'書物（啓蒙思想）', prompt:'a book, reflecting her devotion to Enlightenment ideas'},
+ {id:'mo_star', group:'sisi', label:'星のダイヤモンド（髪飾り）', prompt:'diamond stars woven into her hair'},
+ {id:'mo_horse2', group:'sisi', label:'馬（ハンガリーの草原）', prompt:'a horse on the Hungarian plain'},
+ {id:'mo_mirror', group:'sisi', label:'鏡（美への執着）', prompt:'a hand mirror, reflecting her devotion to her own appearance'},
+ {id:'mo_edelweiss', group:'sisi', label:'エーデルワイス（アルプスの花）', prompt:'a sprig of edelweiss'},
+];
+
+const PROPS = [
+ {id:'pr1', label:'化粧道具（白粉・香水瓶・鏡）', prompt:'a dressing table set with powder, a perfume bottle, and a hand mirror'},
+ {id:'pr2', label:'扇と手袋', prompt:'a folding fan and a pair of long gloves'},
+ {id:'pr3', label:'トランプと酒杯', prompt:'a scattered hand of cards and a glass of wine'},
+ {id:'pr4', label:'庭仕事の道具（じょうろ・熊手・麦わら帽子）', prompt:'a watering can, a small rake, and a straw hat'},
+ {id:'pr5', label:'楽器（ハープとクラヴサン）', prompt:'a harp and a harpsichord in the background'},
+ {id:'pr6', label:'書物と地球儀', prompt:'books and a globe nearby'},
+ {id:'pr7', label:'愛犬（パピヨン犬）', prompt:'a small papillon dog at her feet'},
+ {id:'pr8', label:'白鳥と睡蓮の池', prompt:'a pond with swans and water lilies nearby'},
+];
+
+const BOLD = [
+ {id:'bd0', label:'なし', prompt:''},
+ {id:'bd1', label:'大胆なトリミング', prompt:'a bold, tightly cropped composition'},
+ {id:'bd2', label:'鏡の間の反射構図', prompt:'a composition built around reflections in a hall of mirrors'},
+ {id:'bd3', label:'後ろ姿と巻き髪', prompt:'a composition from behind, showing curled hair and the back of the gown'},
+ {id:'bd4', label:'薔薇の庭に埋もれる構図', prompt:'a composition where she is nearly overtaken by a garden of roses'},
+ {id:'bd5', label:'豪華な裾で画面を埋める', prompt:'a composition where the opulent hem of her gown fills the frame'},
+ {id:'bd6', label:'対角線に走らせる', prompt:'a dynamic diagonal composition'},
+];
+
+const DECOR = [
+ {id:'dc1', label:'金のロカイユ装飾フレーム', prompt:'a gilded rocaille ornamental frame around the scene'},
+ {id:'dc2', label:'リボンと薔薇の縁取り', prompt:'a border of ribbons and roses'},
+ {id:'dc3', label:'レースの縁飾り', prompt:'a delicate lace trim along the edges'},
+ {id:'dc4', label:'月桂樹のリース', prompt:'a wreath of laurel worked into the border'},
+ {id:'dc5', label:'蜂の紋章の散らし', prompt:'small golden bee emblems scattered across the surface'},
+ {id:'dc6', label:'金箔の飛沫', prompt:'flecks of gold leaf scattered across the image'},
+];
+
+const LIGHT = [
+ {id:'lt0', label:'なし', prompt:''},
+ {id:'lt1', label:'柔らかな光', prompt:'soft diffused light'},
+ {id:'lt2', label:'逆光', prompt:'backlit, with light coming from behind her'},
+ {id:'lt3', label:'シャンデリアの明暗', prompt:'warm chiaroscuro from candlelit chandeliers'},
+ {id:'lt4', label:'絹目の質感', prompt:'the fine woven texture of silk visible throughout'},
+ {id:'lt5', label:'金の照り', prompt:'a warm reflected glow from gold leaf and gilding'},
+];
+
+const TEXTSTYLE = [
+ {id:'tx1', label:'手書き風スクリプト体', prompt:'rendered in an elegant handwritten script'},
+ {id:'tx2', label:'ゴールドの箔押し風', prompt:'rendered as if gold-foil stamped'},
+ {id:'tx3', label:'クラシックなセリフ体', prompt:'set in a classic serif typeface'},
+ {id:'tx4', label:'紋章風のエンブレム文字', prompt:'styled like heraldic emblem lettering'},
+];
+
+const SIZES = [
+ {id:'sz1', label:'3:4（縦）', prompt:'aspect ratio 3:4'},
+ {id:'sz2', label:'2:3（縦長）', prompt:'aspect ratio 2:3', def:true},
+ {id:'sz3', label:'1:1（正方形）', prompt:'aspect ratio 1:1'},
+ {id:'sz4', label:'16:9（横）', prompt:'aspect ratio 16:9'},
+];
+
+/* ---------- 状態 ---------- */
+
+const state = {
+  heroine:HEROINES[0].id,
+  costume:null, palette:null,
+  patterns:new Set(), scene:'sc1',
+  style:'st2', deform:'df2', tone:'tn1', dyn:'dy2',
+  framing:'fr2', angle:'an4', hands:'ha1',
+  expression:null,
+  faceRef:'fri2', makeup:'mk1', features:new Set(['ft1','ft2','ft5']),
+  motifs:new Set(),
+  props:new Set(),
+  bold:'bd0', decor:new Set(), light:'lt0',
+  textStyle:'tx1',
+  size:'sz2',
+  exprExtra:'',
+};
+
+function currentHeroine(){return HEROINES.find(h=>h.id===state.heroine)||HEROINES[0];}
+function byGroup(list, group){return list.filter(o=>!o.group || o.group==='both' || o.group===group);}
+
+function applyHeroineDefaults(h){
+  state.costume = h.defCostume;
+  state.palette = h.defPalette;
+  state.expression = h.defExpr;
+  state.motifs = new Set(h.defMotifs);
+  state.patterns = new Set();
+  state.exprExtra = '';
+}
+
+/* ---------- セクション定義 ---------- */
+
+const SECTIONS = [
+  {key:'heroine', title:'ヒロイン', desc:'選んだヒロインによって、装束・色目・モチーフ・表情の初期値が変わります。', type:'single', data:()=>HEROINES},
+  {key:'costume', title:'装束の格', desc:'ヒロインの立場によって選べる装束が変わります。', type:'single', data:()=>byGroup(COSTUMES,currentHeroine().group)},
+  {key:'palette', title:'生地の色目', desc:'★はそのヒロインの時代・場面にゆかりのある色目です。', type:'single', data:()=>PALETTES, star:(o)=>o.star===currentHeroine().group||o.star==='both'},
+  {key:'patterns', title:'文様・意匠', desc:'織りや刺繍の意匠です。複数選べます。', type:'multi', data:()=>byGroup(PATTERNS,currentHeroine().group)},
+  {key:'scene', title:'場面', desc:'背景となる場面を選びます。', type:'single', data:()=>SCENES},
+  {key:'style', title:'画風', desc:'初期値は「華やかな商業イラスト」です。', type:'single', data:()=>STYLES},
+  {key:'deform', title:'デフォルメの度合い', desc:'初期値は「ほどよく」。', type:'single', data:()=>DEFORM},
+  {key:'tone', title:'色調', desc:'画面全体の明るさです。', type:'single', data:()=>TONE},
+  {key:'dyn', title:'躍動感', desc:'髪と衣をどれだけ動かすかです。', type:'single', data:()=>DYN},
+  {key:'framing', title:'画角', desc:'全身に引くほど、姿勢が崩れやすくなります。', type:'single', data:()=>FRAMING},
+  {key:'angle', title:'カメラアングル', desc:'顔を似せたいなら正面か斜め45度が有利です。', type:'single', data:()=>ANGLE},
+  {key:'hands', title:'手の扱い', desc:'指定しないとAIが場当たりに決めます。', type:'single', data:()=>HANDS},
+  {key:'expression', title:'表情と雰囲気', desc:'ヒロインを選ぶと初期値が入りますが、自由に変えられます。', type:'single', data:()=>EXPR},
+  {key:'faceRef', title:'参照画像の効かせ方', desc:'顔写真をアップロードして似せる場合の強さです。', type:'single', data:()=>FACE_REF},
+  {key:'makeup', title:'眉と化粧の扱い', desc:'', type:'single', data:()=>MAKEUP},
+  {key:'features', title:'顔立ち', desc:'複数選べます。増やすほど参照画像の顔から離れます。', type:'multi', data:()=>FEATURES},
+  {key:'motifs', title:'添えるモチーフ', desc:'そのヒロインの物語に根ざしたものです。複数選べます。', type:'multi', data:()=>byGroup(MOTIFS,currentHeroine().group)},
+  {key:'props', title:'小物と趣向', desc:'画面を楽しくするための小道具セットです。複数選べます。', type:'multi', data:()=>PROPS},
+  {key:'bold', title:'大胆な構図', desc:'選ぶと画角より構図の指示が優先されます。', type:'single', data:()=>BOLD},
+  {key:'decor', title:'画面の装飾', desc:'意匠を画面に散らして豪華な調子にします。複数選べます。', type:'multi', data:()=>DECOR},
+  {key:'light', title:'光と質感', desc:'', type:'single', data:()=>LIGHT},
+  {key:'size', title:'出力サイズ', desc:'', type:'single', data:()=>SIZES},
+];
+
+const sectionsEl = document.getElementById('sections');
+
+function isSelected(sec, id){
+  if(sec.type==='multi') return state[sec.key].has(id);
+  return state[sec.key]===id;
+}
+function toggle(sec, id){
+  if(sec.type==='multi'){
+    const s = state[sec.key];
+    if(s.has(id)) s.delete(id); else s.add(id);
+  } else {
+    state[sec.key] = id;
+    if(sec.key==='heroine') applyHeroineDefaults(HEROINES.find(h=>h.id===id));
+  }
+  render();
+}
+function randomizeSection(sec){
+  const opts = sec.data();
+  if(!opts.length) return;
+  if(sec.type==='multi'){
+    const n = Math.min(opts.length, 1+Math.floor(Math.random()*2));
+    const shuffled = [...opts].sort(()=>Math.random()-0.5).slice(0,n);
+    state[sec.key] = new Set(shuffled.map(o=>o.id));
+  } else {
+    const picked = opts[Math.floor(Math.random()*opts.length)].id;
+    state[sec.key] = picked;
+    if(sec.key==='heroine') applyHeroineDefaults(HEROINES.find(h=>h.id===picked));
+  }
+  render();
+}
+
+function renderSections(){
+  sectionsEl.innerHTML = '';
+  SECTIONS.forEach(sec=>{
+    const opts = sec.data();
+    const card = document.createElement('section');
+    card.className='card';
+    const h2 = document.createElement('h2');
+    h2.innerHTML = `<span>${sec.title}</span>`;
+    const rnd = document.createElement('button');
+    rnd.className='mini-random';
+    rnd.textContent='この項目だけランダム';
+    rnd.onclick=()=>randomizeSection(sec);
+    h2.appendChild(rnd);
+    card.appendChild(h2);
+    if(sec.desc){
+      const d = document.createElement('p');
+      d.className='desc';
+      d.textContent = sec.desc;
+      card.appendChild(d);
+    }
+    const chips = document.createElement('div');
+    chips.className='chips';
+    opts.forEach(o=>{
+      const b = document.createElement('button');
+      b.className='chip'+(isSelected(sec,o.id)?' active':'')+((sec.star&&sec.star(o))?' star':'');
+      b.textContent = (o.def?'◎ ':'') + o.label;
+      b.onclick=()=>toggle(sec,o.id);
+      chips.appendChild(b);
+    });
+    card.appendChild(chips);
+    if(sec.key==='expression'){
+      const field = document.createElement('div'); field.className='field';
+      field.innerHTML = `<label>表情・雰囲気の書き足し（任意）</label>`;
+      const inp = document.createElement('input'); inp.type='text'; inp.value=state.exprExtra||'';
+      inp.placeholder='例：どこか寂しげな笑み';
+      inp.oninput=(e)=>{state.exprExtra=e.target.value; updatePrompt();};
+      field.appendChild(inp);
+      card.appendChild(field);
+    }
+    sectionsEl.appendChild(card);
+  });
+
+  // 文字入れセクション（自由入力のため専用に構築）
+  const textCard = document.createElement('section');
+  textCard.className='card';
+  textCard.innerHTML = `<h2>入れる文字</h2><p class="desc">短い文言をタイポグラフィとして画面に置きます。任意です。</p>`;
+  const field1 = document.createElement('div'); field1.className='field';
+  field1.innerHTML = `<label>キャッチコピー（任意）</label>`;
+  const inp1 = document.createElement('input'); inp1.type='text'; inp1.value=state.catchphrase||''; inp1.placeholder='例：王妃の午後';
+  inp1.oninput=(e)=>{state.catchphrase=e.target.value; updatePrompt();};
+  field1.appendChild(inp1);
+  const field2 = document.createElement('div'); field2.className='field';
+  field2.innerHTML = `<label>添える一文（任意）</label>`;
+  const inp2 = document.createElement('input'); inp2.type='text'; inp2.value=state.subtext||''; inp2.placeholder='例：Let them eat cake';
+  inp2.oninput=(e)=>{state.subtext=e.target.value; updatePrompt();};
+  field2.appendChild(inp2);
+  textCard.appendChild(field1);
+  textCard.appendChild(field2);
+  const chips2 = document.createElement('div'); chips2.className='chips'; chips2.style.marginTop='10px';
+  TEXTSTYLE.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='chip'+(state.textStyle===o.id?' active':'');
+    b.textContent=o.label;
+    b.onclick=()=>{state.textStyle=o.id; render();};
+    chips2.appendChild(b);
+  });
+  textCard.appendChild(chips2);
+  sectionsEl.appendChild(textCard);
+
+  // 記法直接入力
+  const rawCard = document.createElement('section');
+  rawCard.className='card';
+  rawCard.innerHTML = `<h2>記法を直接書く（任意）</h2><p class="desc">組み立てたプロンプトの末尾にそのまま追加されます。</p>`;
+  const rawField = document.createElement('div'); rawField.className='field';
+  const rawInp = document.createElement('input'); rawInp.type='text'; rawInp.value=state.rawExtra||'';
+  rawInp.placeholder='例：8k, highly detailed';
+  rawInp.oninput=(e)=>{state.rawExtra=e.target.value; updatePrompt();};
+  rawField.appendChild(rawInp);
+  rawCard.appendChild(rawField);
+  sectionsEl.appendChild(rawCard);
+}
+
+/* ---------- プロンプト組み立て ---------- */
+
+function findPrompt(list, id){
+  const o = list.find(x=>x.id===id);
+  return o ? o.prompt : '';
+}
+function joinPrompts(list, ids, prefix){
+  const parts = [...ids].map(id=>findPrompt(list,id)).filter(Boolean);
+  if(!parts.length) return '';
+  return (prefix||'') + parts.join(', ');
+}
+
+function buildPromptFor(h, overrides){
+  const s = Object.assign({}, state, overrides||{});
+  const parts = [];
+  parts.push(h.base);
+  const costumePrompt = findPrompt(COSTUMES, s.costume);
+  if(costumePrompt) parts.push('wearing '+costumePrompt);
+  const palettePrompt = findPrompt(PALETTES, s.palette);
+  if(palettePrompt) parts.push('in '+palettePrompt);
+  const patternsPrompt = joinPrompts(PATTERNS, s.patterns, '');
+  if(patternsPrompt) parts.push('decorated with '+patternsPrompt);
+  const scenePrompt = findPrompt(SCENES, s.scene);
+  if(scenePrompt) parts.push(scenePrompt);
+  const stylePrompt = findPrompt(STYLES, s.style);
+  if(stylePrompt) parts.push(stylePrompt);
+  const deformPrompt = findPrompt(DEFORM, s.deform);
+  if(deformPrompt) parts.push(deformPrompt);
+  const tonePrompt = findPrompt(TONE, s.tone);
+  if(tonePrompt) parts.push(tonePrompt);
+  const dynPrompt = findPrompt(DYN, s.dyn);
+  if(dynPrompt) parts.push(dynPrompt);
+  const framingPrompt = findPrompt(FRAMING, s.framing);
+  if(framingPrompt) parts.push(framingPrompt);
+  const anglePrompt = findPrompt(ANGLE, s.angle);
+  if(anglePrompt) parts.push(anglePrompt);
+  const handsPrompt = findPrompt(HANDS, s.hands);
+  if(handsPrompt) parts.push(handsPrompt);
+  const exprPrompt = findPrompt(EXPR, s.expression);
+  if(exprPrompt) parts.push(exprPrompt);
+  if(s.exprExtra) parts.push(s.exprExtra);
+  const faceRefPrompt = findPrompt(FACE_REF, s.faceRef);
+  if(faceRefPrompt) parts.push(faceRefPrompt);
+  const makeupPrompt = findPrompt(MAKEUP, s.makeup);
+  if(makeupPrompt) parts.push(makeupPrompt);
+  const featuresPrompt = joinPrompts(FEATURES, s.features, '');
+  if(featuresPrompt) parts.push(featuresPrompt);
+  const motifsPrompt = joinPrompts(MOTIFS, s.motifs, '');
+  if(motifsPrompt) parts.push('with '+motifsPrompt);
+  const propsPrompt = joinPrompts(PROPS, s.props, '');
+  if(propsPrompt) parts.push('accompanied by '+propsPrompt);
+  const boldPrompt = findPrompt(BOLD, s.bold);
+  if(boldPrompt) parts.push(boldPrompt);
+  const decorPrompt = joinPrompts(DECOR, s.decor, '');
+  if(decorPrompt) parts.push(decorPrompt);
+  const lightPrompt = findPrompt(LIGHT, s.light);
+  if(lightPrompt) parts.push(lightPrompt);
+  if(s.catchphrase){
+    const txStyle = findPrompt(TEXTSTYLE, s.textStyle);
+    parts.push(`the words "${s.catchphrase}"`+(txStyle?' '+txStyle:'')+' placed within the composition');
+  }
+  if(s.subtext){
+    parts.push(`with the line "${s.subtext}"`);
+  }
+  const sizePrompt = findPrompt(SIZES, s.size);
+  if(sizePrompt) parts.push(sizePrompt);
+  if(s.rawExtra) parts.push(s.rawExtra);
+  return parts.filter(Boolean).join(', ') + '.';
+}
+
+function updatePrompt(){
+  const text = buildPromptFor(currentHeroine());
+  const out = document.getElementById('promptOut');
+  out.value = text;
+  document.getElementById('charCount').textContent = text.length + ' 文字';
+}
+
+function render(){
+  renderSections();
+  updatePrompt();
+}
+
+/* ---------- おすすめ・ランダム・リセット ---------- */
+
+document.getElementById('btnRecommend').onclick=()=>{
+  applyHeroineDefaults(currentHeroine());
+  state.scene='sc1'; state.style='st2'; state.deform='df2'; state.tone='tn1'; state.dyn='dy2';
+  state.framing='fr2'; state.angle='an4'; state.hands='ha1';
+  state.faceRef='fri2'; state.makeup='mk1'; state.features=new Set(['ft1','ft2','ft5']);
+  state.props=new Set(); state.bold='bd0'; state.decor=new Set(); state.light='lt0';
+  state.size='sz2';
+  render();
+};
+
+document.getElementById('btnRandomAll').onclick=()=>{
+  SECTIONS.forEach(sec=>{
+    const opts = sec.data();
+    if(!opts.length) return;
+    if(sec.type==='multi'){
+      const n = 1+Math.floor(Math.random()*2);
+      const shuffled=[...opts].sort(()=>Math.random()-0.5).slice(0,n);
+      state[sec.key]=new Set(shuffled.map(o=>o.id));
+    } else {
+      state[sec.key]=opts[Math.floor(Math.random()*opts.length)].id;
+    }
+  });
+  render();
+};
+
+document.getElementById('btnResetAll').onclick=()=>{
+  applyHeroineDefaults(currentHeroine());
+  state.catchphrase=''; state.subtext=''; state.rawExtra='';
+  render();
+};
+
+/* ---------- コピー・書き出し ---------- */
+
+document.getElementById('btnCopy').onclick=()=>{
+  const out = document.getElementById('promptOut');
+  navigator.clipboard.writeText(out.value).then(()=>{
+    const btn = document.getElementById('btnCopy');
+    const orig = btn.textContent;
+    btn.textContent='コピーしました';
+    setTimeout(()=>btn.textContent=orig, 1500);
+  });
+};
+
+document.getElementById('btnBatch').onclick=()=>{
+  const lines = HEROINES.map(h=>{
+    const validPatternIds = [...state.patterns].filter(id=>{
+      const p = PATTERNS.find(x=>x.id===id);
+      return p && (!p.group || p.group==='both' || p.group===h.group);
+    });
+    const overrides = {
+      costume:h.defCostume, palette:h.defPalette, expression:h.defExpr,
+      motifs:new Set(h.defMotifs), patterns:new Set(validPatternIds),
+      props:state.props,
+    };
+    return `【${h.label}】\n` + buildPromptFor(h, overrides);
+  });
+  const out = document.getElementById('promptOut');
+  out.value = lines.join('\n\n');
+  document.getElementById('charCount').textContent = out.value.length + ' 文字';
+};
+
+/* ---------- 初期化 ---------- */
+
+applyHeroineDefaults(currentHeroine());
+render();
+</script>
+</body>
+</html>
