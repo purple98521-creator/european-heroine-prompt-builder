@@ -88,6 +88,8 @@
   .chip.active{background:var(--chip-active);color:var(--chip-active-ink);border-color:var(--chip-active);}
   .chip.star::after{content:" ★";color:var(--gold-deep);}
   .chip.active.star::after{color:#ffe3ba;}
+  .chip.fav{border-color:var(--magenta);border-width:2px;font-weight:bold;}
+  .chip.fav.active{box-shadow:0 0 0 2px var(--magenta) inset;}
   .mini-random{
     border:none;background:none;color:var(--sub);
     font-size:.72rem;cursor:pointer;text-decoration:underline;
@@ -287,7 +289,7 @@ const STYLES = [
  {id:'st4', label:'水彩と淡い光の絵', prompt:'a soft watercolor painting with delicate light, visible paper texture and pigment bleed, not a photograph'},
  {id:'st5', label:'現代的なイラストレーション', prompt:'a contemporary digital illustration, flat painted shading, not a photograph'},
  {id:'st6', label:'写実的なポートレート', prompt:'a photorealistic portrait'},
- {id:'st7', label:'グラフィカルな広告ポスター風', prompt:'a polished commercial advertisement poster style: glossy, magazine-quality retouched photography of the face and hair preserving her likeness, while the surrounding setting is abstracted into bold flat color-block panels, torn paper collage textures, and graphic motifs rather than a literal photographic environment'},
+ {id:'st7', label:'グラフィカルな広告ポスター風', prompt:'a polished commercial advertisement poster style: glossy, magazine-quality retouched photography of the face and hair preserving her likeness, while the surrounding setting is abstracted into bold flat color-block panels, torn paper collage textures, and graphic motifs rather than a literal photographic environment', fav:true},
 ];
 
 const DEFORM = [
@@ -556,8 +558,8 @@ function renderSections(){
     chips.className='chips';
     opts.forEach(o=>{
       const b = document.createElement('button');
-      b.className='chip'+(isSelected(sec,o.id)?' active':'')+((sec.star&&sec.star(o))?' star':'');
-      b.textContent = (o.def?'◎ ':'') + o.label;
+      b.className='chip'+(isSelected(sec,o.id)?' active':'')+((sec.star&&sec.star(o))?' star':'')+(o.fav?' fav':'');
+      b.textContent = (o.fav?'♥ ':'') + (o.def?'◎ ':'') + o.label;
       b.onclick=()=>toggle(sec,o.id);
       chips.appendChild(b);
     });
