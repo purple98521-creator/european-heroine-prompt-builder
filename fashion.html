@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>ファッショナブルプロンプトビルダー改</title>
+<style>
+  :root {
+    --bg: #f6f3fa;
+    --surface: #fdfcff;
+    --surface-alt: #ece3f5;
+    --border: #d9caea;
+    --text: #2a2233;
+    --text-muted: #7a6f8c;
+    --accent: #7c5cb8;
+    --accent-strong: #4a3172;
+    --accent-soft: #e6def5;
+    --accent-soft-ink: #4a3172;
+    --chip-bg: #fdfbff;
+    --shadow: 0 1px 2px rgba(75, 40, 120, 0.07), 0 10px 26px rgba(75, 40, 120, 0.07);
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --serif-jp: "Hiragino Mincho ProN", "YuMincho", "Yu Mincho", "Noto Serif JP", serif;
+    --sans-jp: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17131f;
+      --surface: #211a2c;
+      --surface-alt: #2b2237;
+      --border: #453a56;
+      --text: #f0ecf7;
+      --text-muted: #b3a6c4;
+      --accent: #b79ce8;
+      --accent-strong: #d9c9f2;
+      --accent-soft: #362a47;
+      --accent-soft-ink: #d9c9f2;
+      --chip-bg: #2a2136;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #17131f;
+    --surface: #211a2c;
+    --surface-alt: #2b2237;
+    --border: #453a56;
+    --text: #f0ecf7;
+    --text-muted: #b3a6c4;
+    --accent: #b79ce8;
+    --accent-strong: #d9c9f2;
+    --accent-soft: #362a47;
+    --accent-soft-ink: #d9c9f2;
+    --chip-bg: #2a2136;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans-jp);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header.hero {
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--serif-jp);
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 6px 0 10px;
+    text-wrap: balance;
+    color: var(--accent-strong);
+  }
+
+  .hero p {
+    color: var(--text-muted);
+    max-width: 62ch;
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 24px 0 32px;
+    color: var(--accent);
+  }
+  .divider .line { flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
+  .divider .line.rev { background: linear-gradient(to left, var(--border), transparent); }
+  .divider svg { flex-shrink: 0; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .output-card { order: -1; position: static; }
+  }
+
+  section.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .cat-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .cat-title {
+    font-family: var(--serif-jp);
+    font-size: 19px;
+    font-weight: 600;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .cat-title .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .cat-sub {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    margin: 2px 0 16px;
+  }
+
+  .group-label {
+    font-family: var(--serif-jp);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 18px 0 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .group-label:first-of-type {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .mini-btn {
+    font-family: var(--sans-jp);
+    font-size: 12.5px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mini-btn:focus-visible, .chip:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .chip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .chip {
+    text-align: left;
+    background: var(--chip-bg);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease, transform .06s ease;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip:active { transform: scale(0.99); }
+  .chip[aria-pressed="true"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .chip .ja {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .chip[aria-pressed="true"] .ja { color: var(--accent-soft-ink); }
+  .chip .en {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+
+  .field-label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .field-hint {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    margin: -2px 0 8px;
+  }
+  textarea.text-input, input.text-input {
+    width: 100%;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--sans-jp);
+    font-size: 14px;
+    resize: vertical;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .switch {
+    position: relative;
+    width: 44px;
+    height: 25px;
+    flex-shrink: 0;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .switch .knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: left .15s ease, background .15s ease;
+  }
+  .switch[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .switch[aria-checked="true"] .knob { left: 21px; background: var(--accent); }
+
+  .portrait-body { margin-top: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .portrait-body[hidden] { display: none; }
+
+  .mood-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .chip.mood { padding: 8px 10px; }
+  .chip.mood .ja { font-size: 13px; }
+
+  .output-card {
+    position: sticky;
+    top: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .output-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .output-head h2 {
+    font-family: var(--serif-jp);
+    font-size: 16px;
+    margin: 0;
+  }
+  .char-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  #promptOutput {
+    width: 100%;
+    min-height: 220px;
+    max-height: 40vh;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    resize: vertical;
+  }
+  .output-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .btn {
+    font-family: var(--sans-jp);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    flex: 1;
+  }
+  .btn-primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .global-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .copy-toast {
+    font-size: 12px;
+    color: var(--accent);
+    height: 16px;
+    margin-top: 8px;
+    text-align: center;
+    visibility: hidden;
+  }
+  .copy-toast.show { visibility: visible; }
+
+  footer.note {
+    margin-top: 32px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    text-align: center;
+  }
+</style>
+
+</head><body><div class="page">
+  <header class="hero">
+    <div class="eyebrow">IMAGE PROMPT BUILDER</div>
+    <h1>ファッショナブルプロンプトビルダー改</h1>
+    <p>スタイル・被写体・服装・配色・背景要素・モチーフ ── 6つの引き出しから好きな組み合わせを選ぶと、画像生成AI用のプロンプトがその場で組み上がります。基調色や特殊効果、日本語のキャッチコピーを書き足したり、人物ポートレートをスタイリッシュに再構成する指示を加えることもできます。</p>
+    <p style="margin-top:10px;font-size:13px;">
+      <a href="index.html" style="color:var(--accent-strong);">→ ヨーロッパ編</a>　<a href="england.html" style="color:var(--accent-strong);">→ イギリス編</a>　<a href="china.html" style="color:var(--accent-strong);">→ 中国編</a>　<a href="genji.html" style="color:var(--accent-strong);">→ 源氏物語編</a> はこちら
+    </p>
+  </header>
+
+  <div class="divider">
+    <span class="line"></span>
+    <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 L14 7 L7 14 L0 7 Z" fill="currentColor" opacity="0.7"></path></svg>
+    <span class="line rev"></span>
+  </div>
+
+  <div class="layout">
+    <div class="controls">
+      <!-- category sections injected here -->
+      <section class="card" id="portraitCard">
+        <div class="toggle-row">
+          <div>
+            <div class="cat-title">人物ポートレートのアレンジ</div>
+            <p class="cat-sub" style="margin-bottom:0;">アップロードする人物写真の顔立ちを活かしつつ、ファッショナブルなイラストとしてポーズ・アングル・表情ごと作品の世界観に合わせて再構成する指示を追加します</p>
+          </div>
+          <div class="switch" id="portraitSwitch" role="switch" aria-checked="false" tabindex="0"><div class="knob"></div></div>
+        </div>
+        <div class="portrait-body" id="portraitBody" hidden="">
+          <p class="field-hint" style="margin-top:0;">※本アプリは画像を解析しません。実際の写真は画像生成AI側にアップロードしてください。ここでは「その写真を基にこう仕上げてほしい」という指示文だけを作ります。</p>
+          <div>
+            <span class="field-label">アレンジの方向性（複数選択可）</span>
+            <div class="mood-grid" id="moodGrid"></div>
+          </div>
+          <div>
+            <label class="field-label" for="portraitFeatures">人物の特徴・こだわり（任意）</label>
+            <p class="field-hint">例：ショートヘア、赤いスカーフ、優しい笑顔 など</p>
+            <textarea class="text-input" id="portraitFeatures" rows="2" placeholder="髪型・服装・雰囲気などを自由に記入"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="snsCard">
+        <div class="toggle-row">
+          <div>
+            <div class="cat-title">SNSプロフィール画像の参照</div>
+            <p class="cat-sub" style="margin-bottom:0;">モデル画像に加えて、SNSプロフィール欄のスクリーンショットも2枚目の参照画像として渡し、そこに書かれたブランド名・肩書き・キャッチコピーなどのテキスト情報を作品に反映する指示を追加します</p>
+          </div>
+          <div class="switch" id="snsSwitch" role="switch" aria-checked="false" tabindex="0"><div class="knob"></div></div>
+        </div>
+        <div class="portrait-body" id="snsBody" hidden="">
+          <p class="field-hint" style="margin-top:0;">※本アプリは画像を解析しません。プロフィールのスクショは画像生成AI側に2枚目の参照画像としてアップロードしてください。</p>
+          <div>
+            <label class="field-label" for="snsText">反映してほしいテキスト情報（任意）</label>
+            <p class="field-hint">例：ブランド名「〇〇」、肩書き「フラワーアーティスト」など。生成AIが画像内の文字を正しく読み取れないことがあるため、直接入力しておくと確実です</p>
+            <textarea class="text-input" id="snsText" rows="2" placeholder="ブランド名・肩書き・プロフィール文などを自由に入力"></textarea>
+          </div>
+        </div>
+      </section>
+
+<section class="card" id="catchCopyCard">
+        <div class="cat-title" style="margin-bottom:4px;">キャッチコピー・添え文</div>
+        <p class="cat-sub">短い日本語のコピーやひとことを、作品の中にタイポグラフィとして品よく配置する指示を追加します</p>
+        <p class="field-hint" style="margin:-4px 0 4px;">※コピーが思いつかないときは、SNSプロフィール欄のスクリーンショットをClaudeとのチャットで見せてください。その場で案を考えます。</p>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <label class="field-label" for="catchCopy">キャッチコピー（任意）</label>
+            <p class="field-hint">例：凛として、咲く。</p>
+            <input class="text-input" id="catchCopy" placeholder="短い言葉を入力">
+          </div>
+          <div>
+            <label class="field-label" for="subText">添える一文（任意）</label>
+            <p class="field-hint">例：静けさの中に、強さを纏う。</p>
+            <textarea class="text-input" id="subText" rows="2" placeholder="補足の文章を自由に入力"></textarea>
+          </div>
+          <div>
+            <span class="field-label">文字のスタイル（任意・1つ選択）</span>
+            <div class="mood-grid" id="textStyleGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="cat-title" style="margin-bottom:14px;">基調色・特殊効果</div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <span class="field-label">定番の配色から選ぶ（任意・1つ選択）</span>
+            <div class="mood-grid" id="baseColorGrid"></div>
+          </div>
+          <div>
+            <label class="field-label" for="baseColor">基調となる色（任意）</label>
+            <p class="field-hint">例：深いボルドーとアンティークゴールド、朝焼けのようなオレンジとピンク など</p>
+            <input class="text-input" id="baseColor" placeholder="色の指定を自由に入力">
+          </div>
+          <div>
+            <span class="field-label">定番の効果から選ぶ（複数選択可）</span>
+            <div class="mood-grid" id="effectsGrid"></div>
+          </div>
+          <div>
+            <label class="field-label" for="specialEffects">特殊効果・仕上げ（任意）</label>
+            <p class="field-hint">例：二重露光、ホログラム反射、フィルムグレイン、金箔の光沢 など</p>
+            <textarea class="text-input" id="specialEffects" rows="2" placeholder="加えたい効果や質感を自由に入力"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="cat-title" style="margin-bottom:4px;">出力サイズ・比率</div>
+        <p class="cat-sub">画像生成AIに渡す縦横比・出力サイズの指定を追加します</p>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <span class="field-label">アスペクト比（任意・1つ選択）</span>
+            <div class="mood-grid" id="sizeGrid"></div>
+          </div>
+          <div>
+            <label class="field-label" for="customSize">サイズの直接指定（任意）</label>
+            <p class="field-hint">例：1024x1024、--ar 16:9 など、お使いのAIの記法で入力</p>
+            <input class="text-input" id="customSize" placeholder="ピクセルサイズやコマンドを自由に入力">
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="output-card">
+      <div class="output-head">
+        <h2>生成されたプロンプト</h2>
+        <span class="char-count" id="charCount">0 chars</span>
+      </div>
+      <textarea id="promptOutput" readonly="" placeholder="カテゴリを選択すると、ここにプロンプトが表示されます"></textarea>
+      <div class="output-actions">
+        <button class="btn btn-primary" id="copyBtn">コピー</button>
+      </div>
+      <div class="copy-toast" id="copyToast">コピーしました</div>
+      <div class="global-actions">
+        <button class="btn btn-ghost" id="randomBtn">全カテゴリをランダム選択</button>
+        <button class="btn btn-ghost" id="resetBtn">リセット</button>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">生成されるプロンプトは英語です。お使いの画像生成AI（Midjourney / Stable Diffusion / Nano Banana など）にそのまま貼り付けてお使いください。</footer>
+</div>
+
+<script>
+(function () {
+  const CATEGORIES = [
+    {
+      key: "style", title: "スタイル", num: "01", sub: "画風・世界観のベースを1つ以上選びます（6つの系統＋ポートレート表現から）",
+      groups: [
+        {
+          label: "シンプル・洗練系",
+          items: [
+            ["ミニマル（余白を活かしたシンプルなデザイン）", "minimalist design with generous negative space"],
+            ["モダン（シンプルで現代的なデザイン）", "modern, contemporary design with clean simplicity"],
+            ["フラットデザイン（影や質感を使わない平面的なデザイン）", "flat design aesthetic with no shadows or textures, purely two-dimensional shapes"],
+            ["スイススタイル（整ったレイアウトとタイポグラフィ重視）", "Swiss International Style with a structured grid layout and strong typography"],
+            ["バウハウス（機能美・合理性を重視したデザイン）", "Bauhaus-inspired design emphasizing functional beauty and geometric rationalism"],
+            ["エディトリアル（雑誌・カタログのようなレイアウト）", "editorial magazine and catalog-style layout design"],
+            ["タイポグラフィック（文字を主役にしたデザイン）", "typographic design where lettering and type are the central visual focus"]
+          ]
+        },
+        {
+          label: "個性的・インパクト系",
+          items: [
+            ["ブルータリズム（無骨で大胆、力強い印象）", "brutalist design, raw, bold, and powerful in impression"],
+            ["ネオブルータリズム（現代的に解釈したブルータリズム）", "neo-brutalist design, a modern reinterpretation of brutalism"],
+            ["マキシマリズム（情報量を最大化した大胆なデザイン）", "maximalist design with an intentionally overwhelming density of visual information"],
+            ["ポップ（明るく楽しいポップなデザイン）", "bright, cheerful pop design"],
+            ["ポップアート（アート的で強い色彩のグラフィック）", "pop art graphic style with bold, artistic color use"],
+            ["メンフィス（幾何学模様やビビッドな色の遊び心）", "Memphis design style with geometric patterns and playful, vivid colors"],
+            ["グランジ（かすれ・汚れを活かしたラフでクールな質感）", "grunge design with rough, distressed textures and a raw, cool edge"]
+          ]
+        },
+        {
+          label: "レトロ・時代系",
+          items: [
+            ["レトロ（昔懐かしい雰囲気のデザイン）", "retro design with a nostalgic, old-fashioned mood"],
+            ["ヴィンテージ（古着やアンティークのような味わい）", "vintage design with the worn, antique feel of old clothing and objects"],
+            ["Y2K（2000年代の近未来的でポップなデザイン）", "Y2K design, a futuristic yet playful style evoking the early 2000s"],
+            ["ミッドセンチュリー（50〜60年代のデザインスタイル）", "mid-century modern design style from the 1950s-60s"],
+            ["サイケデリック（カラフルで幻想的なデザイン）", "psychedelic design, colorful and dreamlike"],
+            ["アールデコ（直線的で装飾的なクラシックデザイン）", "Art Deco design, geometric and decorative with classic elegance"],
+            ["アールヌーヴォー（曲線美と植物モチーフ）", "Art Nouveau design with flowing curves and botanical motifs"]
+          ]
+        },
+        {
+          label: "未来・デジタル系",
+          items: [
+            ["フューチャリスティック（未来的で近未来の世界観）", "futuristic design expressing a near-future world view"],
+            ["サイバーパンク（SF的でディストピアな世界観）", "cyberpunk design with a sci-fi, dystopian atmosphere"],
+            ["グリッチ（データのエラーやズレを表現）", "glitch design expressing digital errors and visual distortion"],
+            ["ホログラフィック（虹色の光沢や多層的な輝き）", "holographic design with iridescent, multi-layered shimmer"],
+            ["ネオン（ネオンライトのような光の表現）", "neon design with the glow of neon lights"],
+            ["テック（テクノロジー・ガジェット感のあるデザイン）", "tech-inspired design with a technology and gadget feel"],
+            ["グラスモーフィズム（透明感・ぼかしを活かしたガラス風）", "glassmorphism design with translucent, frosted-glass blur effects"]
+          ]
+        },
+        {
+          label: "優しい・自然系",
+          items: [
+            ["ナチュラル（自然素材や優しい色合いのシンプルさ）", "natural design using simple, gentle natural materials and colors"],
+            ["オーガニック（有機的な形や質感を活かしたデザイン）", "organic design with flowing organic shapes and textures"],
+            ["北欧（シンプルで温かみのある北欧スタイル）", "Nordic (Scandinavian) design, simple and warm"],
+            ["ボタニカル（植物や花など自然モチーフ）", "botanical design featuring plant and floral motifs"],
+            ["パステル（淡い色合いで優しい印象のデザイン）", "pastel design with soft, gentle light colors"],
+            ["ハンドクラフト（手作り感・温かみのあるクラフト風）", "handcraft design with a handmade, warm craft-like feel"]
+          ]
+        },
+        {
+          label: "アート・世界観系",
+          items: [
+            ["コラージュ（切り貼りや重ね合わせで表現）", "collage design expressed through cutting and layering paper elements"],
+            ["ZINE（個人誌のような自由でアートなデザイン）", "zine design, freeform and artistic like an independent self-published magazine"],
+            ["ラグジュアリー（高級感・上質感を重視した洗練）", "luxury design emphasizing high-end, refined quality"],
+            ["インダストリアル（工業的・無機質な印象）", "industrial design with a raw, mechanical, utilitarian feel"],
+            ["和モダン（日本の伝統と現代を融合したデザイン）", "Japanese modern design blending Japanese tradition with contemporary style"],
+            ["韓国風（トレンド感のあるシンプルでおしゃれなデザイン）", "Korean-style design, trendy, simple, and fashionable"]
+          ]
+        },
+        {
+          label: "ポートレート・グラフィック系",
+          items: [
+            ["和モダン×デジタルアート（墨絵×ベクター）", "Japanese modern graphic art, vector shapes with sumi-e ink texture"],
+            ["水彩×コラージュ（にじみ×切り貼り）", "analog watercolor texture with digital graphic collage"],
+            ["レトロポップ×モード誌（80年代×雑誌表紙）", "retro-pop fashion magazine cover style, 80s aesthetic with modern twist"],
+            ["ミニマル×シルクスクリーン（余白×版画感）", "minimalist silk-screen print effect, bold shapes and clean lines"],
+            ["幻想的×グラフィック（夢幻×幾何学）", "ethereal dreamlike illustration mixed with geometric graphic design"],
+            ["アール・デコ×モダン（直線美×現代編集）", "Art Deco inspired geometry with clean contemporary editorial style"],
+            ["ネオン×モードグラフィック（ダークモード×光彩）", "stylish dark mode graphic art with subtle vibrant neon accents"],
+            ["版画・木版画風（和×木版）", "modern Japanese woodblock print aesthetic with textured color fields"],
+            ["ポップアート×ハイファッション（強色彩×モード）", "high-fashion pop art illustration with high-contrast color blocking"],
+            ["ペーパーカット風（切り絵×陰影）", "layered paper-cut illustration style with soft depth shadows"]
+          ]
+        }
+      ]
+    },
+    {
+      key: "subject", title: "被写体", num: "02", sub: "人物の属性・表情・ポーズを1つ以上選びます",
+      items: [
+        ["知的な女性（本を持つ）", "intellectual, confident woman holding a book with a composed smile"],
+        ["前を見据える女性（腕組み）", "determined woman crossing her arms, looking directly forward with a sharp gaze"],
+        ["思考する人物（カフェ風）", "thoughtful person sipping coffee, deep in contemplation"],
+        ["軽やかに動く人物（躍動感）", "dynamic pose of a person walking briskly, hair flowing in the wind"],
+        ["横顔・アンニュイ（憂い×静寂）", "side profile of a stylish person with a dreamy, serene expression"],
+        ["眼鏡を掛けた知性派（知的×柔和）", "sophisticated person with stylish glasses, holding a tablet with a subtle smile"],
+        ["笑顔で語りかける姿勢（親しみ×自然体）", "approachable and warm person gesturing naturally as if speaking in a lecture"],
+        ["腰掛けたリラックスポーズ（寛ぎ×上品）", "chic person sitting gracefully on a minimalist chair, resting chin on hand"],
+        ["背面から振り返る目線（ドラマ性×余韻）", "stylish person turning around to glance over the shoulder, dramatic lighting"],
+        ["両手で大切なものを抱える（慈しみ×神秘）", "gentle figure holding a glowing light orb or book close to the chest"],
+        ["上を見上げる希望のまなざし（希望×柔光）", "elegant person looking slightly upward with a calm, hopeful expression, soft light touching the face"],
+        ["片手で髪を整える自然な仕草（無造作×色気）", "stylish person gently brushing hair aside, with a relaxed and effortless expression"],
+        ["デスクで静かに作業へ没頭（集中×静謐）", "focused person leaning over a notebook or laptop, immersed in quiet creative work"],
+        ["手を差し伸べるウェルカムポーズ（歓迎×優雅）", "warm and graceful person extending one hand forward as if inviting or guiding someone"],
+        ["窓辺で光を浴びる横向きの佇まい（自然光×静寂）", "serene person standing by a window in profile, bathed in soft natural light"],
+        ["創造的な瞬間（ペンを執る×思索）", "creative person holding a stylish pen, looking up thoughtfully mid-writing"],
+        ["木漏れ日を浴びる佇まい（木漏れ日×癒し）", "serene person bathed in soft dappled sunlight, enjoying a quiet moment in nature"],
+        ["真摯に耳を傾ける姿勢（傾聴×共感）", "attentive and empathetic person listening closely, head slightly tilted with an open and warm expression"],
+        ["窓辺のインスピレーション（朝光×希望）", "relaxed person looking out a window, bathed in soft morning light with a hopeful gaze"],
+        ["集中するクリエイター（没入×生産性）", "focused person working on a sleek laptop, capturing a moment of deep flow and productivity"],
+        ["植物と調和するひととき（緑×癒し）", "gentle person tending to a lush houseplant, showcasing a moment of calm and connection with nature"],
+        ["未来を指し示す仕草（自信×ビジョン）", "confident person pointing gently toward the distance, projecting vision and shared goals"],
+        ["深呼吸するリフレッシュ（安らぎ×マインドフル）", "peaceful person taking a deep breath with eyes closed, embodying relaxation and mindfulness"],
+        ["アイデアが閃く表情（閃き×高揚）", "bright and engaged person with a sudden realization, eyes sparkling with creativity"],
+        ["温かいマグを両手で包む（温もり×癒し）", "cozy person holding a warm mug with both hands, sharing a comforting and gentle smile"]
+      ]
+    },
+    {
+      key: "clothing", title: "服装", num: "03", sub: "身にまとう衣装・スタイリングを1つ以上選びます",
+      items: [
+        ["モード系オールブラック（先鋭×モノトーン）", "sleek all-black avant-garde outfit with sharp tailored lines"],
+        ["着物×モダンアレンジ（和装×現代シルエット）", "modern reinterpretation of a kimono with a contemporary silhouette"],
+        ["オーバーサイズテーラード（ゆとり×構築美）", "oversized tailored blazer with structured shoulders"],
+        ["シルクドレープドレス（艶やか×流動感）", "flowing silk drape dress with elegant movement"],
+        ["ストリート×ハイファッション（カジュアル×モード）", "high-fashion streetwear mix with bold graphic accents"],
+        ["レザージャケット×モノトーン（無骨×洗練）", "sleek monotone leather jacket with minimalist styling"],
+        ["フローラル刺繍のロングコート（花柄刺繍×クラシック）", "long coat with delicate floral embroidery details"],
+        ["ミニマルニット×アクセサリー（シンプル×差し色）", "minimalist knit outfit paired with statement accessories"],
+        ["ヴィンテージ調ワンピース（レトロ×上品）", "vintage-inspired dress with retro elegance"],
+        ["メタリック×近未来ルック（金属光沢×SF感）", "metallic futuristic look with a sculptural silhouette"],
+        ["テックウェア×アーバンスタイル（機能的×都会的）", "functional techwear with a sleek urban silhouette"],
+        ["シアーレイヤードスタイル（透明感×立体感）", "delicate sheer layered outfit with airy textures"],
+        ["デニム×アヴァンギャルド（日常着×前衛的）", "avant-garde denim style with reconstructed drapes"],
+        ["モダン・ボヘミアン（自由×エレガンス）", "contemporary bohemian look with relaxed textures"],
+        ["ユーティリティ・ワークウェア（実用性×洗練）", "refined utility workwear with clean industrial lines"],
+        ["ジェンダーレス・マニッシュ（中性×スマート）", "genderless tailored look with fluid silhouettes"],
+        ["ネオクラシック・トラッド（伝統×現代性）", "modern twist on classic preppy and tailored elements"],
+        ["アシンメトリー・ドレープ（変則×しなやか）", "asymmetric draped look with a fluid, modern silhouette"],
+        ["グラデーション・シフォン（色彩美×浮遊感）", "soft gradient chiffon outfit with ethereal movement"],
+        ["ネオンアクセント・スポーティ（躍動×近未来）", "sporty chic outfit with vibrant neon accents"]
+      ]
+    },
+    {
+      key: "palette", title: "配色", num: "04", sub: "カラーパレットを1つ以上選びます",
+      items: [
+        ["ディープ＆ヴィヴィッド（濃密×鮮烈）", "deep turquoise, vivid magenta, gold foil, black, and off-white"],
+        ["アースカラー×アクセント（大地色×差し色）", "olive green, warm terracotta, mustard yellow, charcoal black, and beige"],
+        ["パステル×ダーク（優しさ×深み）", "soft lavender, mint green, blush pink, deep navy, and gold"],
+        ["モノトーン×単色アクセント（白黒×紅一点）", "monochrome black and white with striking crimson red accents"],
+        ["サイバー＆ナイト（近未来×深夜）", "midnight blue, neon purple, bright cyan, deep black, and metallic silver"],
+        ["サンセット・グラデーション（夕焼け×グラデーション）", "warm amber, coral pink, plum purple, twilight blue, and cream"],
+        ["ボタニカル・ナチュラル（植物×素朴）", "moss green, sage, warm sand, dark forest green, and copper"],
+        ["ノーブル・クラシック（気品×伝統）", "deep royal blue, wine red, champagne gold, black, and alabaster"],
+        ["北欧・レトロトーン（北欧×レトロ）", "dusty blue, mustard, burnt orange, charcoal gray, and soft white"],
+        ["ハイコントラスト・プライマリ（原色×強コントラスト）", "bold cobalt blue, canary yellow, bright scarlet, stark black, and pure white"],
+        ["和モダン・雅（深み×金箔）", "rich vermilion, deep indigo, matcha green, charcoal black, and gold leaf"],
+        ["インダストリアル・ワーク（無骨×スチール）", "rust orange, slate gray, olive drab, matte black, and brushed steel"],
+        ["トロピカル・オアシス（極彩色×ボタニカル）", "bright mango, jungle green, vibrant orchid, sand beige, and rich gold"],
+        ["アイス・スカンジナビア（静寂×冷涼）", "frosty blue, pale mint, arctic white, warm gray, and soft silver"],
+        ["ヴィンテージ・ライブラリー（クラシック×セピア）", "antique bronze, mahogany red, aged parchment, forest green, and gold"],
+        ["コズミック・ネビュラ（宇宙×スペクトル）", "deep violet, cosmic magenta, starlight yellow, space black, and silver glitter"],
+        ["スイート・シュガー（パステル×ガーリー）", "baby pink, milky peach, soft lavender, cream white, and rose gold"],
+        ["デザート・サファリ（乾いた大地×夕日）", "terracotta clay, desert sand, burnt sienna, dusty olive, and pale cream"],
+        ["カフェ・ミニマリズム（暖色×ニュートラル）", "espresso brown, warm latte, oat milk white, charcoal, and brushed copper"],
+        ["サイエンス・フューチャー（冷光×ダークグレー）", "neon lime, electric blue, metallic titanium, slate black, and stark white"]
+      ]
+    },
+    {
+      key: "background", title: "背景・グラフィック要素", num: "05", sub: "形状・装飾のモチーフを1つ以上選びます",
+      items: [
+        ["和風ブラシアート＆幾何学（墨×幾何学）", "bold sumi-e ink splashes, large circle backdrop, and delicate golden lines"],
+        ["流動的抽象シェイプ（有機的×透明感）", "fluid organic wave shapes, translucent layers, and subtle dot patterns"],
+        ["フレーム＆直線（枠線×直線美）", "sharp diagonal geometric blocks, framed elements, and thin grid lines"],
+        ["植物・ボタニカル文様（葉柄×幾何学）", "abstract botanical silhouettes, leaf motifs overlaid with geometric figures"],
+        ["光とテクスチャ（きらめき×質感）", "gold dust particles, subtle paper texture, and lens flare accents"],
+        ["アーチ＆建築的直線（建築美×陰影）", "architectural arch shapes, clean vertical stripes, and shadow plays"],
+        ["多角形＆クリスタル模様（多面体×透明感）", "abstract polygonal shards, overlapping glass-like shapes with gradients"],
+        ["星図＆天体ライン（星座×神秘）", "astronomical chart lines, subtle constellation dots, and crescent shapes"],
+        ["波形・音波モチーフグラフィック（音波×リズム）", "abstract soundwave lines, concentric ripple circles, and equalizer patterns"],
+        ["グリッド＆タイポグラフィ枠（グリッド×スイス感）", "modern typographic layout frames, Swiss-style grid alignment lines"],
+        ["サイバー・ネオン（デジタル×発光線）", "digital glitch effects, glowing circuit paths, and cybernetic line patterns"],
+        ["リキッドメタル（金属光沢×流体）", "metallic liquid chrome, organic distorted shapes, and high-gloss silver reflections"],
+        ["レトロポップ（幾何学×ハーフトーン）", "retro geometric patterns, halftone dot screens, and vibrant pastel blocks"],
+        ["エスニック・オリエンタル（伝統文様×曼荼羅）", "intricate mandala motifs, traditional geometric patterns, and warm earthy tones"],
+        ["鉱石・ジオロジー（結晶感×地層線）", "raw mineral geode patterns, layered geological strata, and metallic gold veins"],
+        ["ヴェイパーウェイヴ（電脳空間×幻想）", "surreal grid horizons, classical statue silhouettes, and dreamy gradient skies"],
+        ["アールデコ（対称美×金彩）", "symmetrical art deco fans, clean geometric steps, and rich metallic accents"],
+        ["手描きクラフト（水彩×ラフ線）", "soft watercolor washes, rough paper fibers, and playful hand-drawn doodles"],
+        ["ミスト＆オーロラ（煙霧×多色光）", "dreamy pastel fog, fluid smoke trails, and soft atmospheric gradients"],
+        ["ホログラム＆プリズム（虹色反射×屈折光）", "iridescent holographic foils, sharp laser-guided lines, and prismatic refraction"],
+        ["水流＆水面テクスチャ（透明感×ゆらぎ）", "gentle water ripple lines, organic fluid patterns, and soft shimmering light reflections"],
+        ["木漏れ日＆リーフシャドウ（自然光×陰影）", "soft leaf shadows, filtered sunlight patterns, and delicate organic silhouettes"],
+        ["雲霞＆空気のグラデーション（空気感×広がり）", "airy cloud-like textures, subtle atmospheric gradients, and diffused glowing haze"],
+        ["風＆オーガニックライン（風感×流動）", "flowing wind vector lines, soft organic swirls, and gentle breeze silhouettes"],
+        ["砂紋＆アースライン（自然質感×静けさ）", "subtle sand ripple patterns, warm earth tones, and delicate organic lines"]
+      ]
+    },
+    {
+      key: "motif", title: "モチーフ・小物", num: "06", sub: "象徴アイテムを1つ以上選びます",
+      items: [
+        ["ビジネス・知性（万年筆×ノート）", "notebook, fountain pen, laptop, and coffee cup"],
+        ["メディア・発信（マイク×発信）", "vintage microphone, smartphone, podcast icon lines, and headphones"],
+        ["学び・探求（書物×探究心）", "stacked books, magnifying glass, star charts, and compass"],
+        ["自然・癒やし（花瓶×小鳥）", "a delicate flower vase, teacup, green leaves, and a flying bird silhouette"],
+        ["クリエイティブ（筆×閃き）", "paintbrushes, digital tablet, lightbulb icon, and color palette"],
+        ["教育・講義（黒板×学び）", "chalkboard texture element, pointer stick, open textbook, and graduation cap icon"],
+        ["時間・未来（懐中時計×歯車）", "abstract pocket watch, hourglass silhouette, floating gears, and glowing lines"],
+        ["コミュニティ・対話（対話×つながり）", "speech bubble shapes, overlapping hands icon, chain links, and hearts"],
+        ["伝統・文芸（筆×和紙）", "Japanese calligraphy brush, classical manuscript paper motif, and folding fan"],
+        ["テクノロジー・AI（回路×近未来）", "glowing circuit board traces, glowing data node lines, and futuristic HUD elements"],
+        ["心身・調律（ヨガ×ハーブ）", "yoga silhouette, herbal tea, green leaves, and singing bowl"],
+        ["旅・彷徨（トランク×コンパス）", "vintage suitcase, paper map, binoculars, and floating feathers"],
+        ["論理・幾何（数式×パズル）", "geometric shapes, wooden puzzle, abacus, and blueprint lines"],
+        ["音楽・調和（楽譜×音叉）", "classical music sheet, tuning fork, violin bow, and floating notes"],
+        ["日常・豊かさ（珈琲×手仕事）", "coffee dripper, ceramic mug, linen fabric, and craft scissors"],
+        ["宇宙・天体（望遠鏡×星座）", "brass telescope, starry sky map, celestial globe, and crescent moon"],
+        ["言語・対話（辞書×羽ペン）", "thick dictionary, quill pen, inkwell, and open book pages"],
+        ["建築・空間（設計図×模型）", "architectural blueprint, wooden model, ruler, and drawing pencil"],
+        ["収集・博物（鉱石×標本）", "glowing mineral crystals, magnifying glass, antique specimen box, and dry flower"],
+        ["遊戯・発想（チェス×ダイス）", "classic chess piece, wooden dice, hourglass, and velvet cloth"],
+        ["憧れ・変容（蝶々×リボン）", "elegant butterflies, silk ribbons, delicate lace, and gift boxes"],
+        ["結び・伝統（組みひも×和柄）", "braided cords, traditional Japanese patterns, sliding paper doors, and incense burners"],
+        ["幻想・瞬き（シャボン玉×ビーズ）", "iridescent soap bubbles, colorful beads, crystal prisms, and soft light reflections"],
+        ["音楽・調和（音符×ピアノ）", "musical notes, piano keys, classic metronome, and sheet music"],
+        ["息吹・清涼（緑の葉×きらめく風）", "fresh green leaves, sparkling wind swirls, sunbeams, and morning dew"]
+      ]
+    }
+  ];
+
+  const MOODS = [
+    ["スタイリッシュ", "a stylish, refined silhouette"],
+    ["ファッショナブル", "fashionable, editorial haute-couture styling"],
+    ["幻想的", "an ethereal, fantastical atmosphere"],
+    ["デフォルメ強め", "gently deformed, artistically exaggerated proportions for a chic illustrative effect"],
+    ["若々しく・見映えよく", "a subtle retouch for a slightly more youthful, polished look (smoother skin, brighter eyes, a healthy glow)"],
+    ["背景と調和するイラスト化", "fully redrawn as a stylized illustration rather than a photorealistic image, deformed and rendered to match the surrounding artwork's color palette, brushwork, and level of stylization so the figure blends seamlessly into the scene rather than looking like a pasted-in photo"]
+  ];
+
+  const TEXT_STYLES = [
+    ["筆文字・手書き調（有機的×親しみ）", "elegant hand-brushed calligraphy lettering"],
+    ["モダン明朝（知性×洗練）", "refined modern mincho-style typography"],
+    ["太めゴシック（力強さ×明快）", "bold clean sans-serif Japanese typography"],
+    ["縦書き・落款風（伝統×格調）", "vertical Japanese text with a traditional seal-stamp accent"],
+    ["ネオン発光（近未来×高輝度）", "glowing neon-lit Japanese lettering"],
+    ["活版・スタンプ風（レトロ×質感）", "vintage letterpress stamp-style Japanese lettering"],
+    ["ポップ・丸ゴシック（親しみ×軽快）", "playful, rounded gothic-style Japanese lettering with a friendly, upbeat feel"],
+    ["極細・ミニマル（繊細×静謐）", "ultra-thin, minimalist Japanese lettering with delicate, quiet elegance"],
+    ["サイバー・デジタル（未来感×機械的）", "digital, cyber-inspired Japanese lettering with a mechanical, futuristic feel"],
+    ["チョークアート・黒板風（手描き×温もり）", "hand-drawn chalkboard-style Japanese lettering with a warm, textured feel"],
+    ["ゴールド・金属光沢（高級感×輝き）", "gleaming gold, metallic-finish Japanese lettering with a luxurious shine"],
+    ["レトロ・ポップ（懐旧×鮮やか）", "retro pop-style Japanese lettering, nostalgic and vividly colorful"],
+    ["エレガント・筆記体（優雅×流麗）", "elegant, flowing cursive-style Japanese lettering"],
+    ["グラフィティ・ストリート（奔放×個性）", "bold graffiti-style Japanese lettering with raw, street-art energy"],
+    ["クレヨン・パステル調（柔和×遊び心）", "soft crayon and pastel-textured Japanese lettering with a playful touch"],
+    ["シネマ・字幕風（静けさ×余韻）", "cinematic subtitle-style Japanese lettering, quiet and understated"]
+  ];
+
+  const SIZES = [
+    ["正方形（1:1）", "a square format, 1:1 aspect ratio"],
+    ["縦長ポートレート（2:3）", "a vertical portrait format, 2:3 aspect ratio"],
+    ["スマホ壁紙縦長（9:16）", "a tall vertical mobile-wallpaper format, 9:16 aspect ratio"],
+    ["横長ワイド（16:9）", "a wide horizontal format, 16:9 aspect ratio"],
+    ["横長スタンダード（4:3）", "a horizontal format, 4:3 aspect ratio"],
+    ["A4印刷向け縦長", "an A4 print-ready vertical format, 1:1.41 aspect ratio"]
+  ];
+
+  const BASE_COLORS = [
+    ["深いボルドーとアンティークゴールド（クラシック×高貴）", "deep bordeaux red and antique gold"],
+    ["朝焼けのようなオレンジとピンク（温もり×透明感）", "sunrise-like warm orange and soft pink"],
+    ["深海ブルーとプラチナシルバー（静寂×煌めき）", "deep-sea blue and platinum silver"],
+    ["フォレストグリーンと生成りホワイト（自然×調和）", "forest green and natural off-white"],
+    ["薄桜色とペールグレー（繊細×洗練）", "pale cherry blossom pink and soft gray"],
+    ["ミッドナイトブルーとカッパーゴールド（夜空×温感）", "midnight blue and warm copper gold"],
+    ["サンドベージュとテラコッタ（大地×素朴）", "sand beige and earthy terracotta"],
+    ["ミントグリーンとクリアホワイト（清涼×清潔）", "fresh mint green and clean white"],
+    ["ラベンダーパープルとダスティピンク（優美×哀愁）", "lavender purple and dusty pink"],
+    ["チョコレートブラウンとシャンパンゴールド（濃厚×品格）", "rich chocolate brown and champagne gold"]
+  ];
+
+  const SPECIAL_EFFECTS = [
+    ["二重露光（重ね合わせ×残像）", "double exposure effect with overlapping afterimages"],
+    ["ホログラム反射（虹光×近未来）", "holographic iridescent reflections"],
+    ["フィルムグレイン（粒子感×ノスタルジー）", "nostalgic film grain texture"],
+    ["金箔の光沢（伝統美×煌めき）", "gleaming gold leaf accents"],
+    ["水彩のにじみ（水性×偶発性）", "organic watercolor bleeding texture"],
+    ["すりガラス加工（遮光×輪郭美）", "frosted glass blur effect"],
+    ["ネオン発光（夜光×サイバー）", "glowing neon light effect"],
+    ["シルクサテンの光沢（艶感×気品）", "elegant silk satin sheen"],
+    ["レンズフレア（光漏れ×劇的）", "dramatic lens flare light leaks"],
+    ["チョークタッチ（手書き感×素朴）", "rustic hand-drawn chalk texture"]
+  ];
+
+  const selected = {};
+  CATEGORIES.forEach(c => selected[c.key] = new Set());
+  const selectedMoods = new Set();
+  const selectedEffects = new Set();
+  let selectedTextStyleEn = null;
+  let selectedSizeEn = null;
+  let selectedBaseColorEn = null;
+  let portraitOn = false;
+  let snsOn = false;
+
+  const controls = document.querySelector(".controls");
+  const portraitCard = document.getElementById("portraitCard");
+  const catchCopyCard = document.getElementById("catchCopyCard");
+
+  CATEGORIES.forEach(cat => {
+    const section = document.createElement("section");
+    section.className = "card";
+    section.innerHTML = `
+      <div class="cat-head">
+        <div class="cat-title"><span class="num">${cat.num}</span>${cat.title}</div>
+        <button class="mini-btn" type="button" data-random="${cat.key}">この項目だけランダム</button>
+      </div>
+      <p class="cat-sub">${cat.sub}</p>
+    `;
+    controls.insertBefore(section, catchCopyCard);
+
+    function makeChip([ja, en]) {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip";
+      chip.setAttribute("aria-pressed", "false");
+      chip.innerHTML = `<span class="ja">${ja}</span><span class="en">${en}</span>`;
+      chip.addEventListener("click", () => {
+        const set = selected[cat.key];
+        if (set.has(en)) { set.delete(en); chip.setAttribute("aria-pressed", "false"); }
+        else { set.add(en); chip.setAttribute("aria-pressed", "true"); }
+        update();
+      });
+      return chip;
+    }
+
+    const allItems = cat.groups ? cat.groups.flatMap(g => g.items) : cat.items;
+
+    if (cat.groups) {
+      cat.groups.forEach(group => {
+        const label = document.createElement("div");
+        label.className = "group-label";
+        label.textContent = group.label;
+        section.appendChild(label);
+        const grid = document.createElement("div");
+        grid.className = "chip-grid";
+        group.items.forEach(item => grid.appendChild(makeChip(item)));
+        section.appendChild(grid);
+      });
+    } else {
+      const grid = document.createElement("div");
+      grid.className = "chip-grid";
+      cat.items.forEach(item => grid.appendChild(makeChip(item)));
+      section.appendChild(grid);
+    }
+
+    section.querySelector(`[data-random="${cat.key}"]`).addEventListener("click", () => {
+      selected[cat.key].clear();
+      section.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+      const chips = Array.from(section.querySelectorAll(".chip"));
+      const pick = chips[Math.floor(Math.random() * chips.length)];
+      const en = allItems.find(([ja]) => ja === pick.querySelector(".ja").textContent)[1];
+      selected[cat.key].add(en);
+      pick.setAttribute("aria-pressed", "true");
+      update();
+    });
+  });
+
+  // Portrait moods
+  const moodGrid = document.getElementById("moodGrid");
+  MOODS.forEach(([ja, en]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip mood";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedMoods.has(en)) { selectedMoods.delete(en); chip.setAttribute("aria-pressed", "false"); }
+      else { selectedMoods.add(en); chip.setAttribute("aria-pressed", "true"); }
+      update();
+    });
+    moodGrid.appendChild(chip);
+  });
+
+  // Catch-copy text style (single select)
+  const textStyleGrid = document.getElementById("textStyleGrid");
+  TEXT_STYLES.forEach(([ja, en]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip mood";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedTextStyleEn === en) {
+        selectedTextStyleEn = null;
+        chip.setAttribute("aria-pressed", "false");
+      } else {
+        textStyleGrid.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+        selectedTextStyleEn = en;
+        chip.setAttribute("aria-pressed", "true");
+      }
+      update();
+    });
+    textStyleGrid.appendChild(chip);
+  });
+
+  // Output size / aspect ratio (single select)
+  const sizeGrid = document.getElementById("sizeGrid");
+  SIZES.forEach(([ja, en]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip mood";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedSizeEn === en) {
+        selectedSizeEn = null;
+        chip.setAttribute("aria-pressed", "false");
+      } else {
+        sizeGrid.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+        selectedSizeEn = en;
+        chip.setAttribute("aria-pressed", "true");
+      }
+      update();
+    });
+    sizeGrid.appendChild(chip);
+  });
+
+  // Base color (single select)
+  const baseColorGrid = document.getElementById("baseColorGrid");
+  BASE_COLORS.forEach(([ja, en]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip mood";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedBaseColorEn === en) {
+        selectedBaseColorEn = null;
+        chip.setAttribute("aria-pressed", "false");
+      } else {
+        baseColorGrid.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+        selectedBaseColorEn = en;
+        chip.setAttribute("aria-pressed", "true");
+      }
+      update();
+    });
+    baseColorGrid.appendChild(chip);
+  });
+
+  // Special effects (multi select)
+  const effectsGrid = document.getElementById("effectsGrid");
+  SPECIAL_EFFECTS.forEach(([ja, en]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip mood";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedEffects.has(en)) { selectedEffects.delete(en); chip.setAttribute("aria-pressed", "false"); }
+      else { selectedEffects.add(en); chip.setAttribute("aria-pressed", "true"); }
+      update();
+    });
+    effectsGrid.appendChild(chip);
+  });
+
+  // Portrait toggle
+  const portraitSwitch = document.getElementById("portraitSwitch");
+  const portraitBody = document.getElementById("portraitBody");
+  function setPortrait(on) {
+    portraitOn = on;
+    portraitSwitch.setAttribute("aria-checked", String(on));
+    portraitBody.hidden = !on;
+    update();
+  }
+  portraitSwitch.addEventListener("click", () => setPortrait(!portraitOn));
+  portraitSwitch.addEventListener("keydown", e => {
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); setPortrait(!portraitOn); }
+  });
+
+  // SNS profile reference toggle
+  const snsSwitch = document.getElementById("snsSwitch");
+  const snsBody = document.getElementById("snsBody");
+  function setSns(on) {
+    snsOn = on;
+    snsSwitch.setAttribute("aria-checked", String(on));
+    snsBody.hidden = !on;
+    update();
+  }
+  snsSwitch.addEventListener("click", () => setSns(!snsOn));
+  snsSwitch.addEventListener("keydown", e => {
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); setSns(!snsOn); }
+  });
+
+  const baseColorInput = document.getElementById("baseColor");
+  const specialEffectsInput = document.getElementById("specialEffects");
+  const portraitFeaturesInput = document.getElementById("portraitFeatures");
+  const snsTextInput = document.getElementById("snsText");
+  const catchCopyInput = document.getElementById("catchCopy");
+  const subTextInput = document.getElementById("subText");
+  const customSizeInput = document.getElementById("customSize");
+  [baseColorInput, specialEffectsInput, portraitFeaturesInput, snsTextInput, catchCopyInput, subTextInput, customSizeInput].forEach(el => el.addEventListener("input", update));
+
+  const output = document.getElementById("promptOutput");
+  const charCount = document.getElementById("charCount");
+
+  function update() {
+    const parts = [];
+    ["subject", "clothing", "style", "background", "motif", "palette"].forEach(key => {
+      const set = selected[key];
+      if (set.size) parts.push(Array.from(set).join(", "));
+    });
+
+    let prompt = parts.join(", ");
+
+    const baseColorParts = [];
+    if (selectedBaseColorEn) baseColorParts.push(selectedBaseColorEn);
+    const baseColor = baseColorInput.value.trim();
+    if (baseColor) baseColorParts.push(baseColor);
+    if (baseColorParts.length) prompt += (prompt ? ", " : "") + `with a color palette centered on ${baseColorParts.join(", ")}`;
+
+    const effectsParts = [];
+    if (selectedEffects.size) effectsParts.push(Array.from(selectedEffects).join(", "));
+    const effects = specialEffectsInput.value.trim();
+    if (effects) effectsParts.push(effects);
+    if (effectsParts.length) prompt += (prompt ? ", " : "") + effectsParts.join(", ");
+
+    const sentences = [];
+
+    if (portraitOn) {
+      let sentence = "Using the attached reference portrait as a likeness reference, redraw the person as a fully illustrated, fashion-forward character rather than a photorealistic edit, reinterpreting their pose, camera angle, and expression to match the mood and narrative of this artwork";
+      if (selectedMoods.size) sentence += ", with " + Array.from(selectedMoods).join(", ");
+      const features = portraitFeaturesInput.value.trim();
+      if (features) sentence += `, featuring ${features}`;
+      sentence += ", while keeping their distinguishing facial features recognizable.";
+      sentences.push(sentence);
+    }
+
+    if (snsOn) {
+      let sentence = "A second reference image showing the person's SNS profile screenshot is also attached; use it as a reference for their brand identity";
+      const snsText = snsTextInput.value.trim();
+      if (snsText) sentence += `, incorporating the following text/brand information into the artwork's typography and styling: "${snsText}"`;
+      else sentence += ", incorporating any bio text, tagline, or brand name visible in it into the artwork's typography and styling";
+      sentence += ".";
+      sentences.push(sentence);
+    }
+
+    const catchCopy = catchCopyInput.value.trim();
+    const subText = subTextInput.value.trim();
+    if (catchCopy || subText) {
+      const mainText = catchCopy || subText;
+      const secondaryText = catchCopy ? subText : "";
+      const stylePhrase = selectedTextStyleEn || "an elegant, well-composed typographic element";
+      let sentence = `Incorporate the Japanese text "${mainText}" into the composition as ${stylePhrase}`;
+      if (secondaryText) sentence += `, paired with the smaller accompanying phrase "${secondaryText}"`;
+      sentence += ".";
+      sentences.push(sentence);
+    }
+
+    const customSize = customSizeInput.value.trim();
+    if (selectedSizeEn || customSize) {
+      let sentence;
+      if (selectedSizeEn && customSize) sentence = `Output as ${selectedSizeEn} (${customSize}).`;
+      else if (selectedSizeEn) sentence = `Output as ${selectedSizeEn}.`;
+      else sentence = `Output size: ${customSize}.`;
+      sentences.push(sentence);
+    }
+
+    if (sentences.length) prompt = prompt ? `${prompt}. ${sentences.join(" ")}` : sentences.join(" ");
+
+    output.value = prompt;
+    charCount.textContent = `${prompt.length} chars`;
+  }
+
+  document.getElementById("copyBtn").addEventListener("click", async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+    } catch (e) {
+      output.select();
+      document.execCommand("copy");
+    }
+    const toast = document.getElementById("copyToast");
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1400);
+  });
+
+  document.getElementById("randomBtn").addEventListener("click", () => {
+    CATEGORIES.forEach(cat => {
+      document.querySelector(`[data-random="${cat.key}"]`).click();
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    CATEGORIES.forEach(cat => selected[cat.key].clear());
+    selectedMoods.clear();
+    selectedTextStyleEn = null;
+    selectedSizeEn = null;
+    selectedBaseColorEn = null;
+    selectedEffects.clear();
+    document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+    baseColorInput.value = "";
+    specialEffectsInput.value = "";
+    portraitFeaturesInput.value = "";
+    snsTextInput.value = "";
+    catchCopyInput.value = "";
+    subTextInput.value = "";
+    customSizeInput.value = "";
+    setPortrait(false);
+    setSns(false);
+    update();
+  });
+
+  update();
+})();
+</script>
+</body></html>
+>

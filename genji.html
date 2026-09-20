@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>源氏物語 ヒロインプロンプトビルダー</title>
+<style>
+:root{
+  --sumi:#2B2430;
+  --sumi-soft:#4A4052;
+  --fuji:#7A6A9B;
+  --fuji-pale:#DCD3E6;
+  --suou:#8E3B4E;
+  --suou-deep:#6E2B3B;
+  --kin:#A98A45;
+  --kin-pale:#D9C489;
+  --ryoushi:#F3EAE4;
+  --ryoushi-2:#E9DCD4;
+  --paper:#FBF7F4;
+  --line:#D6C6BC;
+}
+*{box-sizing:border-box;}
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  background:var(--ryoushi);
+  color:var(--sumi);
+  font-family:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Songti SC",serif;
+  font-size:16px;
+  line-height:1.85;
+}
+
+/* ---------- hero ---------- */
+.hero{
+  background:
+    radial-gradient(circle at 12% 22%, rgba(217,196,137,.20) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 34% 68%, rgba(217,196,137,.16) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 58% 30%, rgba(217,196,137,.22) 0 1.8px, transparent 2.4px),
+    radial-gradient(circle at 78% 76%, rgba(217,196,137,.14) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 90% 18%, rgba(217,196,137,.20) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 22% 88%, rgba(217,196,137,.15) 0 1.3px, transparent 2px),
+    linear-gradient(160deg,#241E2B 0%,#332742 55%,#2A2033 100%);
+  background-size:180px 180px,220px 220px,160px 160px,260px 260px,200px 200px,240px 240px,100% 100%;
+  color:var(--paper);
+  padding:64px 28px 56px;
+  border-bottom:3px double var(--kin);
+}
+.hero-inner{max-width:820px;margin:0 auto;}
+.hero h1{
+  margin:0 0 6px;
+  font-size:clamp(28px,5.6vw,46px);
+  font-weight:400;
+  letter-spacing:.14em;
+  line-height:1.4;
+}
+.hero .sub{
+  margin:0;
+  color:var(--kin-pale);
+  font-size:14px;
+  letter-spacing:.28em;
+}
+.hero p.lead{
+  margin:26px 0 0;
+  max-width:44em;
+  font-size:15px;
+  line-height:2.0;
+  color:#E4DCE8;
+}
+
+/* ---------- layout ---------- */
+main{max-width:820px;margin:0 auto;padding:0 22px 120px;}
+section{padding:40px 0 34px;border-bottom:1px solid var(--line);}
+section:last-of-type{border-bottom:none;}
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+.sec-head h2{margin:0;font-size:21px;font-weight:400;letter-spacing:.1em;}
+.kou{flex:0 0 auto;opacity:.62;}
+button.mini{
+  margin-left:auto;flex:0 0 auto;
+  font:inherit;font-size:12px;letter-spacing:.06em;
+  background:transparent;color:var(--suou);
+  border:1px solid var(--line);border-radius:2px;
+  padding:4px 11px;cursor:pointer;line-height:1.6;
+}
+button.mini:hover{background:var(--ryoushi-2);border-color:var(--suou);}
+button.mini:focus-visible{outline:2px solid var(--suou);outline-offset:2px;}
+.note{margin:4px 0 20px;font-size:13.5px;line-height:1.95;color:var(--sumi-soft);}
+.note strong{font-weight:600;color:var(--suou-deep);}
+
+/* ---------- choices ---------- */
+.grid{display:flex;flex-wrap:wrap;gap:9px;}
+.chip{
+  position:relative;
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:var(--sumi);
+  border-radius:2px;
+  padding:9px 15px;
+  font:inherit;
+  font-size:14.5px;
+  line-height:1.5;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color .12s, background .12s;
+}
+.chip:hover:not(:disabled){border-color:var(--fuji);}
+.chip:focus-visible{outline:2px solid var(--suou);outline-offset:2px;}
+.chip .en{display:block;font-size:11.5px;color:#8A7E92;letter-spacing:.04em;margin-top:1px;}
+.chip[aria-pressed="true"]{
+  background:var(--sumi);
+  border-color:var(--sumi);
+  color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--kin);
+}
+.chip[aria-pressed="true"] .en{color:var(--kin-pale);}
+.chip:disabled{
+  background:repeating-linear-gradient(135deg,#EFE7E1 0 6px,#E8DED7 6px 12px);
+  color:#A79B9E;
+  cursor:not-allowed;
+  border-style:dashed;
+}
+.chip .why{display:block;font-size:11.5px;color:var(--suou);margin-top:2px;letter-spacing:.02em;}
+
+/* character chips carry a rank band */
+.chip.person{padding-left:15px;}
+.chip.person .tier{display:block;font-size:11px;color:var(--kin);letter-spacing:.08em;margin-top:1px;}
+.chip.person[aria-pressed="true"] .tier{color:var(--kin-pale);}
+
+/* ---------- inputs ---------- */
+label.f{display:block;margin:18px 0 6px;font-size:13.5px;letter-spacing:.06em;color:var(--sumi-soft);}
+input[type=text],textarea{
+  width:100%;
+  border:1px solid var(--line);
+  background:var(--paper);
+  border-radius:2px;
+  padding:10px 13px;
+  font:inherit;
+  font-size:15px;
+  color:var(--sumi);
+}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--fuji);box-shadow:0 0 0 3px var(--fuji-pale);}
+textarea{resize:vertical;min-height:74px;line-height:1.8;}
+::placeholder{color:#B3A7AC;}
+
+.toggle{display:flex;gap:11px;align-items:flex-start;margin:14px 0;cursor:pointer;}
+.toggle input{margin-top:6px;width:17px;height:17px;accent-color:var(--suou);flex:0 0 auto;}
+.toggle span{font-size:14.5px;line-height:1.8;}
+.toggle small{display:block;font-size:12.5px;color:var(--sumi-soft);line-height:1.8;}
+
+.hint{
+  margin:14px 0 0;
+  padding:12px 15px;
+  background:var(--ryoushi-2);
+  border-left:3px solid var(--kin);
+  font-size:13px;
+  line-height:1.9;
+  color:var(--sumi-soft);
+}
+
+/* ---------- output ---------- */
+.swap{
+  margin-top:34px;padding:22px 22px 20px;
+  background:var(--ryoushi-2);border:1px solid var(--line);border-radius:3px;
+}
+.swap h2{margin:0 0 4px;font-size:18px;font-weight:400;letter-spacing:.1em;}
+.swap .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:16px;}
+.swap .now{
+  flex:1 1 180px;min-width:150px;text-align:center;
+  font-size:17px;letter-spacing:.08em;padding:9px 12px;
+  background:var(--paper);border:1px solid var(--line);border-radius:2px;
+}
+.swap .now.none{color:#A79B9E;font-size:14px;}
+.out{
+  margin-top:34px;
+  background:var(--sumi);
+  color:#EDE6F0;
+  border-radius:3px;
+  padding:26px 24px 22px;
+  box-shadow:inset 0 0 0 1px var(--kin);
+}
+.out h2{margin:0 0 4px;font-size:18px;font-weight:400;letter-spacing:.12em;color:var(--kin-pale);}
+.out .count{font-size:12px;color:#9C8FA6;letter-spacing:.08em;}
+pre.prompt{
+  margin:16px 0 0;
+  white-space:pre-wrap;
+  word-break:break-word;
+  font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  font-size:12.6px;
+  line-height:1.85;
+  color:#E8E1EC;
+  max-height:340px;
+  overflow:auto;
+}
+pre.prompt:empty::before{content:"上でヒロインを選ぶと、ここにプロンプトが組み上がります。";color:#8C8095;font-family:inherit;font-size:13.5px;}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;}
+button.act{
+  font:inherit;font-size:14px;letter-spacing:.08em;
+  border-radius:2px;padding:11px 22px;cursor:pointer;border:1px solid transparent;
+}
+button.act:focus-visible{outline:2px solid var(--kin-pale);outline-offset:2px;}
+.primary{background:var(--suou);color:#FFF6F2;}
+.primary:hover{background:var(--suou-deep);}
+.ghost{background:transparent;color:var(--kin-pale);border-color:var(--kin);}
+.ghost:hover{background:rgba(169,138,69,.16);}
+.said{margin-left:2px;font-size:13px;color:var(--kin-pale);align-self:center;opacity:0;transition:opacity .2s;}
+.said.on{opacity:1;}
+.foot{max-width:820px;margin:0 auto;padding:0 22px 80px;font-size:12.5px;line-height:2;color:var(--sumi-soft);}
+.foot hr{border:none;border-top:1px solid var(--line);margin:0 0 20px;}
+
+@media (max-width:600px){
+  .hero{padding:46px 20px 40px;}
+  main{padding:0 18px 90px;}
+  .chip{font-size:14px;padding:8px 13px;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="sub">GENJI　IMAGE　PROMPT　BUILDER</p>
+    <h1>源氏物語　ヒロインプロンプトビルダー</h1>
+    <p class="lead">
+      ヒロインを選ぶと、その身分で着られる装束だけが開きます。重ねの色目は季節と連動し、文様は有職文様に限られます。
+      平安の装束から外れやすいところ（帯・打掛・簪・小袖の襟）は、毎回自動で打ち消します。
+      組み上がるのは英語のプロンプトです。お使いの画像生成AIにそのまま貼ってください。
+    </p>
+    <p class="lead" style="margin-top:18px;">
+      <button class="act primary" id="rec-btn" style="font-size:14px;">◎ おすすめの設定にまとめて合わせる</button>
+    </p>
+    <p class="lead" style="margin-top:12px;font-size:13px;color:var(--kin-pale);">
+      ◎ は、実際に良い結果が出た設定です。★ は、そのヒロインにゆかりのある選択肢です。
+    </p>
+    <p class="lead" style="margin-top:12px;font-size:13px;">
+      <a href="index.html" style="color:var(--kin-pale);">→ ヨーロッパ編</a>　<a href="england.html" style="color:var(--kin-pale);">→ イギリス編</a>　<a href="china.html" style="color:var(--kin-pale);">→ 中国編</a>　<a href="fashion.html" style="color:var(--kin-pale);">→ ファッショナブル編</a> はこちら
+    </p>
+  </div>
+</header>
+
+<main>
+
+<!-- 1 ヒロイン -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,1,2,2,3"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="9" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="21" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>ヒロイン</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">選んだヒロインの身分が、この先の装束の格を決めます。金色の小さな文字が身分の層です。</p>
+  <div class="grid" id="g-person"><button type="button" class="chip person" aria-pressed="false">藤壺（入内の頃）<span class="tier">上流貴族</span></button><button type="button" class="chip person" aria-pressed="false">藤壺の中宮<span class="tier">禁色を許される格</span></button><button type="button" class="chip person" aria-pressed="false">紫の上（二条院）<span class="tier">上流貴族</span></button><button type="button" class="chip person" aria-pressed="false">紫の上（六条院）<span class="tier">上流貴族</span></button><button type="button" class="chip person" aria-pressed="false">葵の上<span class="tier">上流貴族</span></button><button type="button" class="chip person" aria-pressed="false">六条御息所<span class="tier">禁色を許される格</span></button><button type="button" class="chip person" aria-pressed="false">明石の上（明石の浦）<span class="tier">受領層・その他</span></button><button type="button" class="chip person" aria-pressed="false">明石の上（六条院・冬の町）<span class="tier">上流貴族</span></button><button type="button" class="chip person" aria-pressed="false">朧月夜<span class="tier">禁色を許される格</span></button><button type="button" class="chip person" aria-pressed="false">玉鬘（六条院）<span class="tier">受領層・その他</span></button><button type="button" class="chip person" aria-pressed="false">花散里<span class="tier">上流貴族</span></button><button type="button" class="chip person" aria-pressed="false">女三宮<span class="tier">禁色を許される格</span></button><button type="button" class="chip person" aria-pressed="false">空蝉<span class="tier">受領層・その他</span></button><button type="button" class="chip person" aria-pressed="false">夕顔<span class="tier">受領層・その他</span></button><button type="button" class="chip person" aria-pressed="false">浮舟（宇治）<span class="tier">受領層・その他</span></button></div>
+</section>
+
+<!-- 2 装束の格 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,2,3,3"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>装束の格</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">選べない装束も消さずに残しています。<strong>理由が添えてあるところが、身分と装いの関係です。</strong></p>
+  <div class="grid" id="g-rank"><button type="button" class="chip" aria-pressed="false">唐衣裳姿（禁色の唐衣）</button><button type="button" class="chip" aria-pressed="false">唐衣裳姿（十二単）</button><button type="button" class="chip" aria-pressed="false">小袿姿</button><button type="button" class="chip" aria-pressed="false">袿姿</button><button type="button" class="chip" aria-pressed="false">細長</button><button type="button" class="chip" aria-pressed="false">単に袴（褻の姿）</button><button type="button" class="chip" aria-pressed="false">壺装束（外出）</button></div>
+</section>
+
+<!-- 3 季節と色目 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,3,3,2"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="21" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>季節と重ねの色目</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">季節を選ぶと、その季節の色目だけが現れます。★は、そのヒロインにゆかりのある色目です。</p>
+  <div class="grid" id="g-season"><button type="button" class="chip" aria-pressed="false">春</button><button type="button" class="chip" aria-pressed="false">夏</button><button type="button" class="chip" aria-pressed="false">秋</button><button type="button" class="chip" aria-pressed="false">冬</button></div>
+  <div class="grid" id="g-irome" style="margin-top:14px;"><p class="note" style="margin: 0px;">季節を選ぶと色目が現れます。</p></div>
+</section>
+
+<!-- 4 文様 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,1,2,3,3"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="9" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>有職文様</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">織りの地紋として指定します。染めやプリントに見えないよう、英語側で書き分けています。複数選べます。</p>
+  <div class="grid" id="g-monyo"><button type="button" class="chip" aria-pressed="false">浮線綾<span class="en">fusenryo roundels</span></button><button type="button" class="chip" aria-pressed="false">亀甲<span class="en">interlocking hexagons</span></button><button type="button" class="chip" aria-pressed="false">立涌<span class="en">undulating vertical tatewaku waves</span></button><button type="button" class="chip" aria-pressed="false">窠に霰<span class="en">ka-ni-arare roundels scattered with small dots</span></button><button type="button" class="chip" aria-pressed="false">七宝<span class="en">interlocking shippo circles</span></button><button type="button" class="chip" aria-pressed="false">雲鶴<span class="en">cranes among stylised clouds</span></button><button type="button" class="chip" aria-pressed="false">藤丸<span class="en">wisteria roundels</span></button><button type="button" class="chip" aria-pressed="false">幸菱<span class="en">small diamond saiwaibishi lattice</span></button><button type="button" class="chip" aria-pressed="false">小葵<span class="en">small koaoi floral lattice</span></button></div>
+</section>
+
+<!-- 5 場面 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,1,3,2"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>場面</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">光源氏は画面に登場しません。姿を描かず、気配だけを残す構図も混ぜてあります。</p>
+  <div class="grid" id="g-scene"><button type="button" class="chip" aria-pressed="false">御簾の内、几帳のかたわら</button><button type="button" class="chip" aria-pressed="false">簀子に出て庭を眺める</button><button type="button" class="chip" aria-pressed="false">渡殿を行く</button><button type="button" class="chip" aria-pressed="false">灯台の灯りのもと、夜</button><button type="button" class="chip" aria-pressed="false">庭の花のもとに立つ</button><button type="button" class="chip" aria-pressed="false">文を読む</button><button type="button" class="chip" aria-pressed="false">琴を弾く</button><button type="button" class="chip" aria-pressed="false">川辺に佇む</button><button type="button" class="chip" aria-pressed="false">海辺に佇む</button><button type="button" class="chip" aria-pressed="false">雪の朝、庭を見る</button><button type="button" class="chip" aria-pressed="false">誰かに見られている（垣間見の側）</button><button type="button" class="chip" aria-pressed="false">誰かが去ったあとの部屋</button></div>
+</section>
+
+<!-- 6 画風 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,3,2,3,1"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="21" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>画風</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">初期値は「やわらかなイラスト」です。写実にすると肌や毛穴まで作り込まれて、人によっては生々しく見えます。</p>
+  <div class="grid" id="g-style"><button type="button" class="chip" aria-pressed="true">やわらかなイラスト（コラージュ風）</button><button type="button" class="chip" aria-pressed="false">◎ 華やかな商業イラスト（アニメ寄り）</button><button type="button" class="chip" aria-pressed="false">水彩と墨の飛沫</button><button type="button" class="chip" aria-pressed="false">日本画風</button><button type="button" class="chip" aria-pressed="false">大和絵・つくり絵風</button><button type="button" class="chip" aria-pressed="false">絵巻風（引目鉤鼻）</button><button type="button" class="chip" aria-pressed="false">現代的なイラストレーション</button><button type="button" class="chip" aria-pressed="false">写実的なポートレート</button></div>
+  <p class="note" style="margin-top:22px;">デフォルメの度合い ── 初期値は「ほどよく」。顔だけが写真に見えないよう、背景と同じ絵具で描く指示が入ります</p>
+  <div class="grid" id="g-deform"><button type="button" class="chip" aria-pressed="false">ひかえめ<span class="en">写実寄り。人物の実在感を残す</span></button><button type="button" class="chip" aria-pressed="true">◎ ほどよく<span class="en">半写実のイラスト。参照画像はこの辺り</span></button><button type="button" class="chip" aria-pressed="false">しっかり<span class="en">アニメ寄りのイラスト</span></button></div>
+  <p class="note" style="margin-top:22px;">色調 ── 画面全体の明るさ。暗く沈むときはここです</p>
+  <div class="grid" id="g-tone"><button type="button" class="chip" aria-pressed="true">◎ 明るく華やか<span class="en">初期値。白と金を効かせた高明度</span></button><button type="button" class="chip" aria-pressed="false">落ち着いた<span class="en">くすんだ中間色</span></button><button type="button" class="chip" aria-pressed="false">陰影の強い<span class="en">濃い色と強い明暗</span></button></div>
+  <p class="note" style="margin-top:22px;">躍動感 ── 髪と衣をどれだけ動かすか</p>
+  <div class="grid" id="g-motion"><button type="button" class="chip" aria-pressed="false">静かに<span class="en">落ち着いた佇まい</span></button><button type="button" class="chip" aria-pressed="true">◎ 流れる<span class="en">初期値。髪と衣が動く</span></button><button type="button" class="chip" aria-pressed="false">大きく動く<span class="en">花びらと金箔が舞う</span></button></div>
+</section>
+
+<!-- 7 アングル -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,1,1,2,2"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>アングル</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">画角 ── 全身に引くほど、腕と裾のつながりが破綻しやすくなります</p>
+  <div class="grid" id="g-framing"><button type="button" class="chip" aria-pressed="false">全身<span class="en">裳まで見えるが、ポーズが崩れやすい</span></button><button type="button" class="chip" aria-pressed="true">◎ 膝上<span class="en">初期値。重ねと姿勢が両立する</span></button><button type="button" class="chip" aria-pressed="false">胸から上<span class="en">最も崩れにくい。襟の重ねがよく見える</span></button><button type="button" class="chip" aria-pressed="false">手元と袖<span class="en">顔を出さず、装束だけを見せる</span></button></div>
+  <p class="note" style="margin-top:22px;">顔を似せたいなら正面か斜め45度、装束を見せたいならやや俯瞰が有利です。横顔とあおりは顔が崩れやすくなります。</p>
+  <div class="grid" id="g-angle"><button type="button" class="chip" aria-pressed="false">正面<span class="en">顔が最も似ます</span></button><button type="button" class="chip" aria-pressed="false">斜め45度<span class="en">顔が似て、装束も見えます</span></button><button type="button" class="chip" aria-pressed="false">横顔<span class="en">顔は崩れやすくなります</span></button><button type="button" class="chip" aria-pressed="false">◎ やや俯瞰<span class="en">重ねの襟が最もよく見えます</span></button><button type="button" class="chip" aria-pressed="false">あおり<span class="en">顔が歪みやすくなります</span></button></div>
+  <p class="note" style="margin-top:22px;">手の扱い ── 指定しないと、袖のどこから腕が出るかをAIが場当たりに決めます</p>
+  <div class="grid" id="g-hands"><button type="button" class="chip" aria-pressed="true">◎ 両手を袖の中に納める<span class="en">最も崩れにくい</span></button><button type="button" class="chip" aria-pressed="false">片手で檜扇を持つ<span class="en">手の位置を明示します</span></button><button type="button" class="chip" aria-pressed="false">両手を前で重ねる<span class="en">座り姿に向きます</span></button><button type="button" class="chip" aria-pressed="false">指定しない<span class="en">AIに任せます</span></button></div>
+</section>
+
+<!-- 7 表情・雰囲気 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,2,1,3"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="21" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>表情と雰囲気</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">ヒロインを選ぶと初期値が入りますが、自由に変えられます。</p>
+  <div class="grid" id="g-expr"><button type="button" class="chip" aria-pressed="false">伏し目がちに</button><button type="button" class="chip" aria-pressed="false">こちらを見つめて</button><button type="button" class="chip" aria-pressed="false">微笑を含んで</button><button type="button" class="chip" aria-pressed="false">物思いに沈んで</button><button type="button" class="chip" aria-pressed="false">扇で口元を隠して</button><button type="button" class="chip" aria-pressed="false">ふと振り返る</button></div>
+  <div class="grid" id="g-mood" style="margin-top:14px;"><button type="button" class="chip" aria-pressed="false">華やかで明るい</button><button type="button" class="chip" aria-pressed="false">気高く近寄りがたい</button><button type="button" class="chip" aria-pressed="false">楚々として控えめ</button><button type="button" class="chip" aria-pressed="false">翳りを帯びた</button><button type="button" class="chip" aria-pressed="false">聡明で落ち着いた</button><button type="button" class="chip" aria-pressed="false">少女らしくあどけない</button></div>
+  <label class="f" for="mood-free">雰囲気の書き足し（任意）</label>
+  <input type="text" id="mood-free" placeholder="例：優等生的、どこか近寄りがたい、芯の強さ">
+</section>
+
+<!-- 8 顔立ち -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,3,1,2"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="21" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>顔立ちのオーダー</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <label class="toggle">
+    <input type="checkbox" id="use-ref" checked="">
+    <span>参照画像の顔を使う
+      <small>アップロードした写真の顔立ちを活かしたまま、平安のヒロインとして再構成する指示を加えます。</small>
+    </span>
+  </label>
+  <p class="note" style="margin-top:20px;">参照画像をどこまで効かせるか ── 初期値は、似ていることを保ったまま絵として描き起こす設定です</p>
+  <div class="grid" id="g-refmode"><button type="button" class="chip" aria-pressed="false">写真の顔をそのまま使う<span class="en">最も似るが、写真の質感まで付いてくる</span></button><button type="button" class="chip" aria-pressed="true">◎ 本人に似せたイラストにする<span class="en">初期値。似ているが、絵として成立する</span></button><button type="button" class="chip" aria-pressed="false">雰囲気だけ<span class="en">画風は最も安定するが、似なくなる</span></button></div>
+  <p class="note" style="margin-top:20px;">眉と白粉の扱い</p>
+  <div class="grid" id="g-brow"><button type="button" class="chip" aria-pressed="true">◎ 現代風の眉・自然な肌<span class="en">参照画像の印象が残ります</span></button><button type="button" class="chip" aria-pressed="false">引眉・白粉（平安の作法）<span class="en">考証に忠実ですが、印象が大きく変わります</span></button></div>
+  <p class="note" style="margin-top:20px;">顔立ち ── ◎の三つは最初から選んであります。この組み合わせが最も安定しました</p>
+  <div class="grid" id="g-face"><button type="button" class="chip" aria-pressed="true">◎ 透明感のある肌<span class="en">luminous translucent skin</span></button><button type="button" class="chip" aria-pressed="true">◎ 鼻筋の通った端正な顔立ち<span class="en">a straight elegant nose, refined features</span></button><button type="button" class="chip" aria-pressed="false">切れ長の目<span class="en">long narrow almond eyes</span></button><button type="button" class="chip" aria-pressed="false">ふっくらとした頬<span class="en">a softly rounded face, full cheeks in the Heian ideal</span></button><button type="button" class="chip" aria-pressed="true">◎ 陶器のような肌<span class="en">smooth porcelain skin</span></button></div>
+  <label class="f" for="face-free">顔立ちの書き足し（任意）</label>
+  <input type="text" id="face-free" placeholder="例：やわらかい目元、涼やかな眉">
+  <p class="hint">
+    ◎の三つは、実際に似姿と画風が両立した組み合わせです。ここから足すときは一つずつ試してください。増やすほど参照画像の顔から離れます。<br>
+    「女優風」はAIが現代西洋のイメージで受け取り、装束と衝突しがちです。「整った目鼻立ち」のように言い換えると安定します。
+  </p>
+</section>
+
+<!-- 9 モチーフ -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,1,2,2,1"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="21" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>添えるモチーフ</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">★は、そのヒロインの物語に根ざしたものです。何も選ばなければ季節の景物だけが出ます。</p>
+  <div class="grid" id="g-motif"><button type="button" class="chip" aria-pressed="false">藤の花<span class="en">trailing wisteria blossom</span></button><button type="button" class="chip" aria-pressed="false">桜<span class="en">cherry blossom</span></button><button type="button" class="chip" aria-pressed="false">雀の子<span class="en">a small sparrow</span></button><button type="button" class="chip" aria-pressed="false">葵<span class="en">heart-shaped aoi leaves</span></button><button type="button" class="chip" aria-pressed="false">榊<span class="en">a sprig of evergreen sakaki</span></button><button type="button" class="chip" aria-pressed="false">秋の野の草<span class="en">autumn grasses of the moor</span></button><button type="button" class="chip" aria-pressed="false">波<span class="en">breaking waves</span></button><button type="button" class="chip" aria-pressed="false">琵琶<span class="en">a biwa lute</span></button><button type="button" class="chip" aria-pressed="false">琴<span class="en">a long koto zither</span></button><button type="button" class="chip" aria-pressed="false">雪<span class="en">falling snow</span></button><button type="button" class="chip" aria-pressed="false">松<span class="en">a pine bough</span></button><button type="button" class="chip" aria-pressed="false">朧月<span class="en">a hazy moon veiled in cloud</span></button><button type="button" class="chip" aria-pressed="false">山吹<span class="en">yellow kerria blossom</span></button><button type="button" class="chip" aria-pressed="false">蛍<span class="en">drifting fireflies</span></button><button type="button" class="chip" aria-pressed="false">橘の花<span class="en">white orange blossom</span></button><button type="button" class="chip" aria-pressed="false">ほととぎす<span class="en">a cuckoo in flight</span></button><button type="button" class="chip" aria-pressed="false">唐猫<span class="en">a small Chinese cat on a long cord</span></button><button type="button" class="chip" aria-pressed="false">碁盤<span class="en">a go board with black and white stones</span></button><button type="button" class="chip" aria-pressed="false">脱ぎ捨てた薄衣<span class="en">a discarded gauze robe</span></button><button type="button" class="chip" aria-pressed="false">夕顔の花<span class="en">white moonflowers on a vine</span></button><button type="button" class="chip" aria-pressed="false">白い扇<span class="en">a white folded fan</span></button><button type="button" class="chip" aria-pressed="false">宇治川<span class="en">a wide misted river</span></button><button type="button" class="chip" aria-pressed="false">小舟<span class="en">a small boat on the water</span></button><button type="button" class="chip" aria-pressed="false">檜扇<span class="en">an opened hiougi fan of thin cypress slats</span></button><button type="button" class="chip" aria-pressed="false">几帳<span class="en">a standing kichou curtain of state</span></button><button type="button" class="chip" aria-pressed="false">庭の遣水<span class="en">a winding garden stream</span></button></div>
+</section>
+
+<!-- 小物と趣向 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,3,1,2,2"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>小物と趣向</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">テーマごとの束です。物語の根拠は問わず、画面を楽しくするためのもの。複数選べます。</p>
+  <div class="grid" id="g-motifset"><button type="button" class="chip" aria-pressed="false">手習（筆×料紙）<span class="en">a writing brush, an inkstone box, a folded letter on tinted decorated paper, a sprig of blossom tied to the letter</span></button><button type="button" class="chip" aria-pressed="false">薫物（香炉×煙）<span class="en">a bronze incense burner, fine threads of scented smoke drifting upward, a small lacquer box</span></button><button type="button" class="chip" aria-pressed="false">遊び（貝合わせ×双六）<span class="en">painted matching shells spilling from a lacquer box, a sugoroku board, scattered go stones</span></button><button type="button" class="chip" aria-pressed="false">楽（琴×琵琶）<span class="en">a long koto zither, a biwa lute laid on its side, a flute in a brocade bag</span></button><button type="button" class="chip" aria-pressed="false">調度（几帳×御簾）<span class="en">a standing kichou curtain of state, a half-rolled misu blind, patterned tatami edging, a round straw mat</span></button><button type="button" class="chip" aria-pressed="false">灯（灯台×影）<span class="en">a tall oil lamp stand with a single flame, long soft shadows thrown across the floor</span></button><button type="button" class="chip" aria-pressed="false">秋草（薄×露）<span class="en">plumes of susuki grass, bush clover, dewdrops catching the light, a small woven insect cage</span></button><button type="button" class="chip" aria-pressed="false">花鳥（桜×鶯）<span class="en">cherry blossom, a warbler on a branch, drifting butterflies</span></button><button type="button" class="chip" aria-pressed="false">水（流水×浮葉）<span class="en">stylised flowing water lines, leaves floating on the surface, a low winding garden stream</span></button><button type="button" class="chip" aria-pressed="false">月（望月×叢雲）<span class="en">a full moon, banks of cloud drifting across it, low mist</span></button><button type="button" class="chip" aria-pressed="false">雪（雪輪×松）<span class="en">stylised yukiwa snow-ring motifs, snow resting on pine needles, bare branches</span></button><button type="button" class="chip" aria-pressed="false">扇（檜扇×蝙蝠扇）<span class="en">an opened hiougi fan of thin cypress slats, a folded kawahori fan, more fans scattered loose</span></button><button type="button" class="chip" aria-pressed="false">蒔絵（螺鈿×金粉）<span class="en">mother-of-pearl inlay, gold lacquer maki-e, gold dust scattered over a dark ground</span></button><button type="button" class="chip" aria-pressed="false">物の怪（生霊×霞）<span class="en">a faint second figure dissolving into mist behind her, drifting spirit-fire, thin gauze veils</span></button><button type="button" class="chip" aria-pressed="false">唐猫（猫×紐）<span class="en">a small Chinese cat on a long red cord, a blind lifted where it passed</span></button><button type="button" class="chip" aria-pressed="false">舟（小舟×川霧）<span class="en">a small boat drawn up at the bank, river mist, reeds at the water edge</span></button><button type="button" class="chip" aria-pressed="false">時を超えて（硯×タブレット）<span class="en">a deliberate playful anachronism: an inkstone and brush laid beside a slim modern tablet, a folded paper letter beside a coffee cup</span></button></div>
+</section>
+
+<!-- 大胆な構図 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,1,3,3"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>大胆な構図</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">選ばなければ、ふつうの人物構図になります。選ぶと画角やアングルより構図の指示が優先されるので、姿が見えにくくなることもあります。切り抜き系は文字の居場所を奪うので、キャッチコピーを入れるときは避けてください。</p>
+  <div class="grid" id="g-comp"><button type="button" class="chip" aria-pressed="false">大胆なトリミング</button><button type="button" class="chip" aria-pressed="false">吹抜屋台の俯瞰</button><button type="button" class="chip" aria-pressed="false">御簾越しの分割</button><button type="button" class="chip" aria-pressed="false">裾で画面を埋める</button><button type="button" class="chip" aria-pressed="false">後ろ姿と髪</button><button type="button" class="chip" aria-pressed="false">大胆な余白</button><button type="button" class="chip" aria-pressed="false">扇面に切り抜く（文字と相性が悪い）</button><button type="button" class="chip" aria-pressed="false">円窓に切り抜く（文字と相性が悪い）</button><button type="button" class="chip" aria-pressed="false">屏風の折れで割る</button><button type="button" class="chip" aria-pressed="false">対角線に走らせる</button><button type="button" class="chip" aria-pressed="false">金雲で分断する</button></div>
+</section>
+
+<!-- 10 背景の装飾 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,3,2,1"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="21" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>画面の装飾</h2><button type="button" class="mini">この項目だけランダム</button></div>
+  <p class="note">料紙や蒔絵の意匠を画面に散らして、豪華な調子にします。複数選べます。</p>
+  <div class="grid" id="g-decor"><button type="button" class="chip" aria-pressed="false">檜扇を散らす<span class="en">opened Heian fans scattered across the background</span></button><button type="button" class="chip" aria-pressed="false">桜の吹き寄せ<span class="en">cherry petals drifting and gathering across the composition</span></button><button type="button" class="chip" aria-pressed="false">紅葉の吹き寄せ<span class="en">scarlet maple leaves drifting across the composition</span></button><button type="button" class="chip" aria-pressed="false">金銀の砂子<span class="en">gold and silver leaf flecks scattered like sunago across the surface</span></button><button type="button" class="chip" aria-pressed="false">料紙の切継ぎ<span class="en">the background composed of torn and joined sheets of decorated Heian paper in different colours</span></button><button type="button" class="chip" aria-pressed="false">すやり霞<span class="en">horizontal bands of stylised gold mist drawn across the scene</span></button><button type="button" class="chip" aria-pressed="false">几帳の帷子<span class="en">panels of silk curtain hanging across part of the frame</span></button><button type="button" class="chip" aria-pressed="false">蒔絵の意匠<span class="en">gold lacquer maki-e motifs worked into the surrounding surfaces</span></button><button type="button" class="chip" aria-pressed="false">金屏風<span class="en">a gold-leaf folding screen behind her</span></button><button type="button" class="chip" aria-pressed="false">三角の色面を散らす<span class="en">angular geometric shards and triangles of flat colour scattered behind the figure</span></button><button type="button" class="chip" aria-pressed="false">金箔の飛沫<span class="en">splashes and bursting flecks of gold leaf thrown across the image</span></button><button type="button" class="chip" aria-pressed="false">金の蝶<span class="en">gold-outlined butterflies drifting through the composition</span></button><button type="button" class="chip" aria-pressed="false">色紙の重ね<span class="en">overlapping rectangles of tinted paper framing the figure</span></button></div>
+  <label class="f" for="color-free">基調となる色（任意）</label>
+  <input type="text" id="color-free" placeholder="例：深い紫と金、白と淡い紅">
+  <div class="grid" id="g-fx" style="margin-top:14px;"><button type="button" class="chip" aria-pressed="false">柔らかな光<span class="en">soft diffused light</span></button><button type="button" class="chip" aria-pressed="false">逆光<span class="en">backlit, light coming from behind her</span></button><button type="button" class="chip" aria-pressed="false">灯火の明暗<span class="en">strong chiaroscuro from a single flame</span></button><button type="button" class="chip" aria-pressed="false">絹目の質感<span class="en">the fine texture of woven silk visible throughout</span></button><button type="button" class="chip" aria-pressed="false">金の照り<span class="en">warm reflected glow from gold leaf</span></button><button type="button" class="chip" aria-pressed="false">霞<span class="en">a veil of mist softening the depth</span></button></div>
+</section>
+
+<!-- 11 文字 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,1,1,2,3"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>入れる文字</h2></div>
+  <p class="note">短い日本語を、画面の中にタイポグラフィとして置きます。長い文は崩れるので、十数文字までが安全です。</p>
+  <label class="f" for="copy-main">キャッチコピー（任意）</label>
+  <input type="text" id="copy-main" placeholder="例：春の光は、この人のもの。">
+  <label class="f" for="copy-sub">添える一文（任意）</label>
+  <input type="text" id="copy-sub" placeholder="例：几帳のかげに、心を隠して。">
+  <div class="grid" id="g-type" style="margin-top:16px;"><button type="button" class="chip" aria-pressed="false">縦書き</button><button type="button" class="chip" aria-pressed="false">◎ 散らし書き</button><button type="button" class="chip" aria-pressed="false">金泥</button><button type="button" class="chip" aria-pressed="false">墨書き</button></div>
+</section>
+
+<!-- 12 出力 -->
+<section>
+  <div class="sec-head"><span class="kou" data-kou="1,2,2,3,1"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><line x1="3" y1="4" x2="3" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="9" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="15" y1="4" x2="15" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="21" y1="4" x2="21" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="27" y1="4" x2="27" y2="19" stroke="#A98A45" stroke-width="1.3"></line><line x1="3" y1="4" x2="27" y2="4" stroke="#A98A45" stroke-width="1.3"></line><line x1="9" y1="4" x2="15" y2="4" stroke="#A98A45" stroke-width="1.3"></line></svg></span><h2>出力サイズ</h2></div>
+  <div class="grid" id="g-ar"><button type="button" class="chip" aria-pressed="false">3:4（縦）</button><button type="button" class="chip" aria-pressed="false">2:3（縦長）</button><button type="button" class="chip" aria-pressed="false">1:1（正方形）</button><button type="button" class="chip" aria-pressed="false">16:9（横）</button></div>
+  <label class="f" for="ar-free">記法を直接書く（任意）</label>
+  <input type="text" id="ar-free" placeholder="例：--ar 3:4、1024x1365">
+</section>
+
+<div class="swap">
+  <h2>ヒロインを差し替える</h2>
+  <p class="note" style="margin:6px 0 0;">画風・デフォルメ・色調・躍動感・参照画像・画角・手の扱い・装飾・文字は、そのまま保たれます。入れ替わるのはヒロインと、その人に結びついた装束の格・重ねの色目・モチーフ・表情だけです。</p>
+  <div class="row">
+    <button class="act ghost" id="prev-p" style="color:var(--suou);border-color:var(--line);">◀ 前のヒロイン</button>
+    <span class="now none" id="now-p">ヒロインが選ばれていません</span>
+    <button class="act ghost" id="next-p" style="color:var(--suou);border-color:var(--line);">次のヒロイン ▶</button>
+  </div>
+  <div class="row">
+    <button class="act primary" id="all-p">15人分をまとめて書き出す</button>
+  </div>
+</div>
+
+<div class="out">
+  <h2>組み上がったプロンプト</h2>
+  <span class="count" id="count">0 文字</span>
+  <pre class="prompt" id="prompt"></pre>
+  <div class="btns">
+    <button class="act primary" id="btn-copy">コピーする</button>
+    <button class="act ghost" id="btn-rand">全項目をおまかせで選ぶ</button>
+    <button class="act ghost" id="btn-reset">選び直す</button>
+    <span class="said" id="said">コピーしました</span>
+  </div>
+</div>
+
+</main>
+
+<div class="foot">
+  <hr>
+  参照画像は、ご自身の写真かご本人の許諾がある写真だけをお使いください。<br>
+  画風は技法名で指定しています。特定の作家や作品の名前は含めていません。
+</div>
+
+<script>
+/* ============================================================
+   源氏香の図（セクション見出しの飾り）
+   ============================================================ */
+document.querySelectorAll('.kou').forEach(el=>{
+  const g = el.dataset.kou.split(',').map(Number);
+  const W=34,H=22,gap=6,x0=3,top=4,bot=H-3;
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">`;
+  for(let i=0;i<5;i++){
+    const x=x0+i*gap;
+    s+=`<line x1="${x}" y1="${top}" x2="${x}" y2="${bot}" stroke="#A98A45" stroke-width="1.3"/>`;
+  }
+  [1,2,3].forEach(id=>{
+    const idx=g.map((v,i)=>v===id?i:-1).filter(i=>i>=0);
+    if(idx.length>1){
+      const a=x0+Math.min(...idx)*gap, b=x0+Math.max(...idx)*gap;
+      s+=`<line x1="${a}" y1="${top}" x2="${b}" y2="${top}" stroke="#A98A45" stroke-width="1.3"/>`;
+    }
+  });
+  el.innerHTML=s+`</svg>`;
+});
+
+/* ============================================================
+   データ
+   ============================================================ */
+
+// 身分の三層
+const TIERS = {
+  1:{jp:'禁色を許される格', en:'of the very highest rank at court'},
+  2:{jp:'上流貴族', en:'of high aristocratic rank'},
+  3:{jp:'受領層・その他', en:'of provincial-governor class rank'}
+};
+
+const PEOPLE = [
+  {id:'fujitsubo_y', jp:'藤壺（入内の頃）', tier:2,
+   en:'a young girl newly entered into the imperial palace, her beauty already spoken of in whispers',
+   mood:'mood_maiden', expr:'expr_downcast',
+   irome:['fuji','wakakusa'], motif:['fuji_flower','tsubo_court']},
+  {id:'fujitsubo_c', jp:'藤壺の中宮', tier:1,
+   en:'an imperial consort of the highest rank, serene and unapproachable',
+   mood:'mood_noble', expr:'expr_gaze',
+   irome:['fuji','kouhai'], motif:['fuji_flower','kichou']},
+  {id:'murasaki_n', jp:'紫の上（二条院）', tier:2,
+   en:'a young wife in a private residence, still growing into her position',
+   mood:'mood_bright', expr:'expr_smile',
+   irome:['koubai','wakakusa'], motif:['suzume','sakura']},
+  {id:'murasaki_r', jp:'紫の上（六条院）', tier:2,
+   en:'the mistress of the spring quarter of a great mansion, at the height of her splendour, a shadow beneath it',
+   mood:'mood_bright', expr:'expr_gaze',
+   irome:['sakura','koubai'], motif:['sakura','kin_koto']},
+  {id:'aoi', jp:'葵の上', tier:2,
+   en:'a principal wife of impeccable family, formal and reserved',
+   mood:'mood_noble', expr:'expr_downcast',
+   irome:['futaai','suou_i'], motif:['aoi_leaf','kichou']},
+  {id:'rokujo', jp:'六条御息所', tier:1,
+   en:'a widowed consort of extraordinary refinement, proud and inwardly burning',
+   mood:'mood_shadow', expr:'expr_gaze',
+   irome:['kikutsuki','momiji'], motif:['sakaki','akino']},
+  {id:'akashi_u', jp:'明石の上（明石の浦）', tier:3,
+   en:'a provincial lady raised by the sea, modest in dress but faultless in cultivation',
+   mood:'mood_quiet', expr:'expr_downcast',
+   irome:['kuchiba','aokuchiba'], motif:['nami','biwa']},
+  {id:'akashi_r', jp:'明石の上（六条院・冬の町）', tier:2,
+   en:'the mistress of the winter quarter of a great mansion, quiet and self-possessed',
+   mood:'mood_quiet', expr:'expr_gaze',
+   irome:['koori','matsu'], motif:['yuki','matsu_tree']},
+  {id:'oborozukiyo', jp:'朧月夜', tier:1,
+   en:'a dazzling lady of the palace, bold and full of life',
+   mood:'mood_bright', expr:'expr_turn',
+   irome:['sakura','koubai'], motif:['oborozuki','sakura']},
+  {id:'tamakazura', jp:'玉鬘（六条院）', tier:3,
+   en:'a young woman newly arrived in the capital, radiant and much sought after',
+   mood:'mood_bright', expr:'expr_smile',
+   irome:['yamabuki','nadeshiko'], motif:['yamabuki_f','hotaru']},
+  {id:'hanachirusato', jp:'花散里', tier:2,
+   en:'a gentle lady of the summer quarter, unremarkable in looks and constant in heart',
+   mood:'mood_quiet', expr:'expr_smile',
+   irome:['tachibana','unohana'], motif:['tachibana_f','hototogisu']},
+  {id:'onnasan', jp:'女三宮', tier:1,
+   en:'a very young imperial princess of the highest birth, childlike and unguarded',
+   mood:'mood_maiden', expr:'expr_downcast',
+   irome:['sakura','wakakusa'], motif:['karaneko','sakura']},
+  {id:'utsusemi', jp:'空蝉', tier:3,
+   en:'a quiet married woman of modest rank, guarded and clear-minded',
+   mood:'mood_quiet', expr:'expr_fan',
+   irome:['seminoha','unohana'], motif:['goban','usuginu']},
+  {id:'yugao', jp:'夕顔', tier:3,
+   en:'a mysterious woman who will not give her name, soft and fleeting',
+   mood:'mood_shadow', expr:'expr_fan',
+   irome:['unohana','nadeshiko'], motif:['yugao_f','shiroi_ougi']},
+  {id:'ukifune', jp:'浮舟（宇治）', tier:3,
+   en:'a young woman living at Uji among the river mists, torn and irresolute',
+   mood:'mood_shadow', expr:'expr_musing',
+   irome:['yanagi','koori'], motif:['ujigawa','kobune']}
+];
+
+const RANKS = [
+  {id:'kinjiki', jp:'唐衣裳姿（禁色の唐衣）', tiers:[1],
+   deny:'禁色の唐衣は、位階が許されません',
+   en:'in full formal court dress (karaginu-mo): a hitoe under-robe, five layered itsutsuginu robes with graduated colours showing at collar and sleeve, a glossed uchiginu, an uwagi outer robe, a short karaginu jacket in a forbidden court colour permitted only to the very highest rank. The karaginu is a SHORT waist-length jacket: its hem cuts straight across at hip level, far above the knee, so that all the robes beneath it continue on down and are plainly visible below its hem for most of their length. It is much shorter than every other garment she wears and a different colour from all of them — and a long pleated mo train fastened at the back of the waist, falling continuously from her waist and trailing away behind her along the floor in the direction her body is turned'},
+  {id:'karaginumo', jp:'唐衣裳姿（十二単）', tiers:[1,2],
+   deny:'受領層の女性が晴の唐衣裳姿を取ることはありません',
+   en:'in full formal court dress (karaginu-mo): a hitoe under-robe, five layered itsutsuginu robes with graduated colours showing at collar and sleeve, a glossed uchiginu, an uwagi outer robe, a short karaginu jacket. The karaginu is a SHORT waist-length jacket: its hem cuts straight across at hip level, far above the knee, so that all the robes beneath it continue on down and are plainly visible below its hem for most of their length. It is much shorter than every other garment she wears and a different colour from all of them — and a long pleated mo train fastened at the back of the waist, falling continuously from her waist and trailing away behind her along the floor in the direction her body is turned'},
+  {id:'kouchigi', jp:'小袿姿', tiers:[1,2,3], en:'in kouchigi dress: layered silk robes beneath a shorter kouchigi outer robe, the semi-formal indoor dress of a noblewoman, worn without jacket or train'},
+  {id:'uchiki', jp:'袿姿', tiers:[1,2,3], en:'in uchiki dress: several layered silk robes over a hitoe, worn with long crimson hakama trousers, without jacket or train'},
+  {id:'hosonaga', jp:'細長', tiers:[1,2,3], only:['fujitsubo_y','murasaki_n','onnasan','tamakazura','ukifune'],
+   deny:'細長は、まだ年若い女性の装いです',
+   en:'in hosonaga: a long slender outer robe of light silk worn over layered robes, the dress of a very young noblewoman'},
+  {id:'ke', jp:'単に袴（褻の姿）', tiers:[1,2,3], en:'in private undress: a single sheer hitoe robe worn over long crimson hakama trousers, her appearance within her own rooms'},
+  {id:'tsubo', jp:'壺装束（外出）', tiers:[2,3],
+   deny:'徒歩で出歩くことは、この身分の女性にはありません',
+   en:'in tsubo-shozoku travelling dress: her robes gathered and tucked up for walking, wearing a wide-brimmed ichime-gasa hat hung with gauze veiling'}
+];
+
+const SEASONS = [
+  {id:'spring', jp:'春', en:'spring'},
+  {id:'summer', jp:'夏', en:'summer'},
+  {id:'autumn', jp:'秋', en:'autumn'},
+  {id:'winter', jp:'冬', en:'winter'}
+];
+
+const IROME = [
+  // 春
+  {id:'koubai', jp:'紅梅', s:'spring', en:'crimson over deep sappanwood red'},
+  {id:'sakura',  jp:'桜',   s:'spring', en:'white over pale rose showing faintly through'},
+  {id:'yanagi',  jp:'柳',   s:'spring', en:'white over soft willow green'},
+  {id:'fuji',    jp:'藤',   s:'spring', en:'pale wisteria lavender over soft green'},
+  {id:'wakakusa',jp:'若草', s:'spring', en:'graduated tones of fresh young green'},
+  {id:'yamabuki',jp:'山吹', s:'spring', en:'golden yellow over russet'},
+  // 夏
+  {id:'unohana', jp:'卯花',   s:'summer', en:'white over pale green'},
+  {id:'ayame',   jp:'菖蒲',   s:'summer', en:'crimson over young green'},
+  {id:'nadeshiko',jp:'撫子',  s:'summer', en:'soft pink over pale green'},
+  {id:'seminoha',jp:'蝉の羽', s:'summer', en:'sheer translucent gauze in smoky grey, the layers beneath faintly visible'},
+  {id:'aokuchiba',jp:'青朽葉',s:'summer', en:'greenish russet'},
+  {id:'tachibana',jp:'橘',    s:'summer', en:'russet over deep green'},
+  // 秋
+  {id:'ominaeshi',jp:'女郎花',s:'autumn', en:'yellow-green over pale green'},
+  {id:'hagi',    jp:'萩',    s:'autumn', en:'sappanwood red over blue-green'},
+  {id:'momiji',  jp:'紅葉',  s:'autumn', en:'scarlet over golden russet'},
+  {id:'kuchiba', jp:'朽葉',  s:'autumn', en:'faded russet and amber'},
+  {id:'kikutsuki',jp:'菊',   s:'autumn', en:'white over faded violet'},
+  // 冬
+  {id:'koori',   jp:'氷重ね',s:'winter', en:'white over the palest blue-white'},
+  {id:'kareno',  jp:'枯野',  s:'winter', en:'pale ochre over faint blue'},
+  {id:'matsu',   jp:'松重ね',s:'winter', en:'young green over deep pine green'},
+  {id:'yukinoshita',jp:'雪の下',s:'winter', en:'white with crimson glowing through from beneath'},
+  // 通年（濃色）
+  {id:'futaai',  jp:'二藍',  s:'all', en:'deep indigo-tinged purple'},
+  {id:'suou_i',  jp:'蘇芳',  s:'all', en:'dark sappanwood red'}
+];
+
+const MONYO = [
+  {id:'fusenryo', jp:'浮線綾', en:'fusenryo roundels'},
+  {id:'kikko',    jp:'亀甲',   en:'interlocking hexagons'},
+  {id:'tatewaku', jp:'立涌',   en:'undulating vertical tatewaku waves'},
+  {id:'kaniarare',jp:'窠に霰', en:'ka-ni-arare roundels scattered with small dots'},
+  {id:'shippou',  jp:'七宝',   en:'interlocking shippo circles'},
+  {id:'unkaku',   jp:'雲鶴',   en:'cranes among stylised clouds'},
+  {id:'fujimaru', jp:'藤丸',   en:'wisteria roundels'},
+  {id:'saiwaibishi',jp:'幸菱', en:'small diamond saiwaibishi lattice'},
+  {id:'koaoi',    jp:'小葵',   en:'small koaoi floral lattice'}
+];
+
+const SCENES = [
+  {id:'misu', jp:'御簾の内、几帳のかたわら', en:'seated indoors behind a hanging misu blind, beside a standing kichou curtain of state'},
+  {id:'sunoko', jp:'簀子に出て庭を眺める', en:'seated on the open sunoko veranda of a shinden mansion, looking out over the garden'},
+  {id:'watadono', jp:'渡殿を行く', en:'walking along the covered watadono corridor between the halls of a mansion'},
+  {id:'tomoshibi', jp:'灯台の灯りのもと、夜', en:'at night, lit only by the small flame of an oil lamp stand, deep shadow around her'},
+  {id:'niwa', jp:'庭の花のもとに立つ', en:'standing in the garden beneath flowering branches'},
+  {id:'fumi', jp:'文を読む', en:'reading a folded letter written on decorated paper, an inkstone box beside her'},
+  {id:'koto', jp:'琴を弾く', en:'seated with a long koto zither before her, her sleeves spread over the strings'},
+  {id:'kawabe', jp:'川辺に佇む', en:'standing at the edge of a misted river'},
+  {id:'umibe', jp:'海辺に佇む', en:'standing on a shore, the sea behind her'},
+  {id:'yuki', jp:'雪の朝、庭を見る', en:'looking out at a snow-covered garden in the early morning'},
+  {id:'kaimami', jp:'誰かに見られている（垣間見の側）', en:'seen from beyond a gap in a screen or hedge, unaware she is being watched, the watcher entirely outside the frame'},
+  {id:'kehai', jp:'誰かが去ったあとの部屋', en:'alone in a room someone has just left, a discarded fan and disordered robes nearby, no other person in the frame'}
+];
+
+const FRAMING = [
+  {id:'full', jp:'全身', hint:'裳まで見えるが、ポーズが崩れやすい',
+   en:'Full-length view, her whole figure and the trailing hem of her robes within the frame. The entire top of her head and hair sits well inside the frame with clear empty space above it'},
+  {id:'knee', rec:1, jp:'膝上', hint:'初期値。重ねと姿勢が両立する',
+   en:'Cropped at about the knee. The entire top of her head and hair sits well inside the frame with clear empty space above it — never crop the top of her head — and the fall of the layered robes occupies the lower part of the frame'},
+  {id:'bust', jp:'胸から上', hint:'最も崩れにくい。襟の重ねがよく見える',
+   en:'Close view from the chest up. The entire top of her head and hair sits well inside the frame with clear empty space above it — never crop the top of her head. The stacked graduated collars of the layered robes are clearly visible'},
+  {id:'hands', jp:'手元と袖', hint:'顔を出さず、装束だけを見せる',
+   en:'A close view of her hands and the wide layered sleeves, her face outside the frame or only partly visible'}
+];
+
+/* 手の扱い ── 指定しないとAIが場当たりに解決する */
+const HANDS = [
+  {id:'h_sleeve', rec:1, jp:'両手を袖の中に納める', hint:'最も崩れにくい',
+   en:'Both her hands are drawn up inside her long sleeves and not visible'},
+  {id:'h_fan', jp:'片手で檜扇を持つ', hint:'手の位置を明示します',
+   en:'One hand emerges from the mouth of the sleeve at waist height and holds a folded fan upright against her chest; the other hand stays inside its sleeve'},
+  {id:'h_hold', jp:'両手を前で重ねる', hint:'座り姿に向きます',
+   en:'Both hands rest together in front of her at waist height, the sleeve mouths falling over the wrists'},
+  {id:'h_free', jp:'指定しない', hint:'AIに任せます', en:''}
+];
+
+const ANGLES = [
+  {id:'front', jp:'正面', hint:'顔が最も似ます', en:'facing the viewer directly, frontal portrait'},
+  {id:'three', jp:'斜め45度', hint:'顔が似て、装束も見えます', en:'turned three-quarters toward the viewer'},
+  {id:'profile', jp:'横顔', hint:'顔は崩れやすくなります', en:'in strict profile, seen from the side'},
+  {id:'high', rec:1, jp:'やや俯瞰', hint:'重ねの襟が最もよく見えます', en:'viewed from slightly above, looking down on her, the graduated collars of the layered robes clearly visible at the neck'},
+  {id:'low', jp:'あおり', hint:'顔が歪みやすくなります', en:'viewed from slightly below, looking up at her'}
+];
+
+const EXPR = [
+  {id:'expr_downcast', jp:'伏し目がちに', en:'her eyes lowered'},
+  {id:'expr_gaze', jp:'こちらを見つめて', en:'looking steadily at the viewer'},
+  {id:'expr_smile', jp:'微笑を含んで', en:'a faint smile at her lips'},
+  {id:'expr_musing', jp:'物思いに沈んで', en:'lost in thought, her gaze unfocused'},
+  {id:'expr_fan', jp:'扇で口元を隠して', en:'holding a folded fan before the lower half of her face'},
+  {id:'expr_turn', jp:'ふと振り返る', en:'turning to glance back over her shoulder'}
+];
+
+const MOOD = [
+  {id:'mood_bright', jp:'華やかで明るい', en:'bright, brilliant, full of life'},
+  {id:'mood_noble', jp:'気高く近寄りがたい', en:'noble, composed, difficult to approach'},
+  {id:'mood_quiet', jp:'楚々として控えめ', en:'quiet, modest, understated'},
+  {id:'mood_shadow', jp:'翳りを帯びた', en:'shadowed, melancholy beneath the surface'},
+  {id:'mood_wise', jp:'聡明で落ち着いた', en:'intelligent and calm'},
+  {id:'mood_maiden', jp:'少女らしくあどけない', en:'girlish and innocent'}
+];
+
+const FACE = [
+  {id:'clear', rec:1, jp:'透明感のある肌', en:'luminous translucent skin'},
+  {id:'nose', rec:1, jp:'鼻筋の通った端正な顔立ち', en:'a straight elegant nose, refined features'},
+  {id:'eyes', jp:'切れ長の目', en:'long narrow almond eyes'},
+  {id:'cheek', jp:'ふっくらとした頬', en:'a softly rounded face, full cheeks in the Heian ideal'},
+  {id:'porcelain', rec:1, jp:'陶器のような肌', en:'smooth porcelain skin'}
+];
+
+const MOTIFS = [
+  {id:'fuji_flower', jp:'藤の花', en:'trailing wisteria blossom'},
+  {id:'sakura', jp:'桜', en:'cherry blossom'},
+  {id:'suzume', jp:'雀の子', en:'a small sparrow'},
+  {id:'aoi_leaf', jp:'葵', en:'heart-shaped aoi leaves'},
+  {id:'sakaki', jp:'榊', en:'a sprig of evergreen sakaki'},
+  {id:'akino', jp:'秋の野の草', en:'autumn grasses of the moor'},
+  {id:'nami', jp:'波', en:'breaking waves'},
+  {id:'biwa', jp:'琵琶', en:'a biwa lute'},
+  {id:'kin_koto', jp:'琴', en:'a long koto zither'},
+  {id:'yuki', jp:'雪', en:'falling snow'},
+  {id:'matsu_tree', jp:'松', en:'a pine bough'},
+  {id:'oborozuki', jp:'朧月', en:'a hazy moon veiled in cloud'},
+  {id:'yamabuki_f', jp:'山吹', en:'yellow kerria blossom'},
+  {id:'hotaru', jp:'蛍', en:'drifting fireflies'},
+  {id:'tachibana_f', jp:'橘の花', en:'white orange blossom'},
+  {id:'hototogisu', jp:'ほととぎす', en:'a cuckoo in flight'},
+  {id:'karaneko', jp:'唐猫', en:'a small Chinese cat on a long cord'},
+  {id:'goban', jp:'碁盤', en:'a go board with black and white stones'},
+  {id:'usuginu', jp:'脱ぎ捨てた薄衣', en:'a discarded gauze robe'},
+  {id:'yugao_f', jp:'夕顔の花', en:'white moonflowers on a vine'},
+  {id:'shiroi_ougi', jp:'白い扇', en:'a white folded fan'},
+  {id:'ujigawa', jp:'宇治川', en:'a wide misted river'},
+  {id:'kobune', jp:'小舟', en:'a small boat on the water'},
+  {id:'hiougi', jp:'檜扇', en:'an opened hiougi fan of thin cypress slats'},
+  {id:'kichou', jp:'几帳', en:'a standing kichou curtain of state'},
+  {id:'tsubo_court', jp:'庭の遣水', en:'a winding garden stream'}
+];
+
+const DECOR = [
+  {id:'ougi_chirashi', jp:'檜扇を散らす', en:'opened Heian fans scattered across the background'},
+  {id:'sakura_fuki', jp:'桜の吹き寄せ', en:'cherry petals drifting and gathering across the composition'},
+  {id:'momiji_fuki', jp:'紅葉の吹き寄せ', en:'scarlet maple leaves drifting across the composition'},
+  {id:'sunago', jp:'金銀の砂子', en:'gold and silver leaf flecks scattered like sunago across the surface'},
+  {id:'kiritsugi', jp:'料紙の切継ぎ', en:'the background composed of torn and joined sheets of decorated Heian paper in different colours'},
+  {id:'suyari', jp:'すやり霞', en:'horizontal bands of stylised gold mist drawn across the scene'},
+  {id:'kichou_cloth', jp:'几帳の帷子', en:'panels of silk curtain hanging across part of the frame'},
+  {id:'maki_e', jp:'蒔絵の意匠', en:'gold lacquer maki-e motifs worked into the surrounding surfaces'},
+  {id:'kinbyobu', jp:'金屏風', en:'a gold-leaf folding screen behind her'},
+  {id:'geo', jp:'三角の色面を散らす', en:'angular geometric shards and triangles of flat colour scattered behind the figure'},
+  {id:'kinpaku_splash', jp:'金箔の飛沫', en:'splashes and bursting flecks of gold leaf thrown across the image'},
+  {id:'chou', jp:'金の蝶', en:'gold-outlined butterflies drifting through the composition'},
+  {id:'kasane_iro', jp:'色紙の重ね', en:'overlapping rectangles of tinted paper framing the figure'}
+];
+
+const FX = [
+  {id:'glow', jp:'柔らかな光', en:'soft diffused light'},
+  {id:'backlight', jp:'逆光', en:'backlit, light coming from behind her'},
+  {id:'lamp', jp:'灯火の明暗', en:'strong chiaroscuro from a single flame'},
+  {id:'grain', jp:'絹目の質感', en:'the fine texture of woven silk visible throughout'},
+  {id:'gold_glow', jp:'金の照り', en:'warm reflected glow from gold leaf'},
+  {id:'mist', jp:'霞', en:'a veil of mist softening the depth'}
+];
+
+/* 小物と趣向 ── テーマごとの束 */
+const MOTIF_SETS = [
+  {id:'ms_tenarai', jp:'手習（筆×料紙）', en:'a writing brush, an inkstone box, a folded letter on tinted decorated paper, a sprig of blossom tied to the letter'},
+  {id:'ms_takimono', jp:'薫物（香炉×煙）', en:'a bronze incense burner, fine threads of scented smoke drifting upward, a small lacquer box'},
+  {id:'ms_asobi', jp:'遊び（貝合わせ×双六）', en:'painted matching shells spilling from a lacquer box, a sugoroku board, scattered go stones'},
+  {id:'ms_gaku', jp:'楽（琴×琵琶）', en:'a long koto zither, a biwa lute laid on its side, a flute in a brocade bag'},
+  {id:'ms_choudo', jp:'調度（几帳×御簾）', en:'a standing kichou curtain of state, a half-rolled misu blind, patterned tatami edging, a round straw mat'},
+  {id:'ms_tomoshibi', jp:'灯（灯台×影）', en:'a tall oil lamp stand with a single flame, long soft shadows thrown across the floor'},
+  {id:'ms_akikusa', jp:'秋草（薄×露）', en:'plumes of susuki grass, bush clover, dewdrops catching the light, a small woven insect cage'},
+  {id:'ms_kachou', jp:'花鳥（桜×鶯）', en:'cherry blossom, a warbler on a branch, drifting butterflies'},
+  {id:'ms_mizu', jp:'水（流水×浮葉）', en:'stylised flowing water lines, leaves floating on the surface, a low winding garden stream'},
+  {id:'ms_tsuki', jp:'月（望月×叢雲）', en:'a full moon, banks of cloud drifting across it, low mist'},
+  {id:'ms_yuki', jp:'雪（雪輪×松）', en:'stylised yukiwa snow-ring motifs, snow resting on pine needles, bare branches'},
+  {id:'ms_ougi', jp:'扇（檜扇×蝙蝠扇）', en:'an opened hiougi fan of thin cypress slats, a folded kawahori fan, more fans scattered loose'},
+  {id:'ms_makie', jp:'蒔絵（螺鈿×金粉）', en:'mother-of-pearl inlay, gold lacquer maki-e, gold dust scattered over a dark ground'},
+  {id:'ms_mononoke', jp:'物の怪（生霊×霞）', en:'a faint second figure dissolving into mist behind her, drifting spirit-fire, thin gauze veils'},
+  {id:'ms_neko', jp:'唐猫（猫×紐）', en:'a small Chinese cat on a long red cord, a blind lifted where it passed'},
+  {id:'ms_fune', jp:'舟（小舟×川霧）', en:'a small boat drawn up at the bank, river mist, reeds at the water edge'},
+  {id:'ms_ima', jp:'時を超えて（硯×タブレット）', en:'a deliberate playful anachronism: an inkstone and brush laid beside a slim modern tablet, a folded paper letter beside a coffee cup'}
+];
+
+/* 大胆な構図 */
+const COMPOSITION = [
+  {id:'cp_crop', jp:'大胆なトリミング', en:'Composition: crop the figure hard against the frame edge, letting part of her head or body run out of the picture'},
+  {id:'cp_fukinuki', jp:'吹抜屋台の俯瞰', en:'Composition: seen steeply from above as though the roof had been lifted away, floor, screens and blinds laid out on strong diagonals'},
+  {id:'cp_misu', jp:'御簾越しの分割', en:'Composition: the frame divided by a hanging blind, part of the image seen through its fine slats'},
+  {id:'cp_hem', jp:'裾で画面を埋める', en:'Composition: the trailing robes sweep across and fill most of the frame, the figure herself small at one edge'},
+  {id:'cp_back', jp:'後ろ姿と髪', en:'Composition: seen entirely from behind, her long black hair filling the composition, her face unseen'},
+  {id:'cp_void', jp:'大胆な余白', en:'Composition: the figure pushed far to one side, the rest of the frame left almost empty'},
+  {id:'cp_fanshape', jp:'扇面に切り抜く（文字と相性が悪い）', en:'Composition: the whole scene contained inside the shape of an opened folding fan, the rest of the surface bare'},
+  {id:'cp_circle', jp:'円窓に切り抜く（文字と相性が悪い）', en:'Composition: the whole scene seen through a perfect circular window'},
+  {id:'cp_byobu', jp:'屏風の折れで割る', en:'Composition: the image broken into tall vertical panels like a folding screen, with slight offsets between them'},
+  {id:'cp_diag', jp:'対角線に走らせる', en:'Composition: one strong diagonal running corner to corner, the robes following it'},
+  {id:'cp_kumo', jp:'金雲で分断する', en:'Composition: broad bands of stylised gold cloud cut across the scene and hide parts of it'}
+];
+
+const STYLES = [
+  {id:'collage', jp:'やわらかなイラスト（コラージュ風）',
+   en:'A soft matte digital illustration in a modern editorial collage style, set against layered paper-collage planes of flat muted colour with torn paper edges, botanical cut-outs and fine gold line accents. Gentle paper grain over the whole image, no depth-of-field blur'},
+  {id:'shoujo', rec:1, jp:'華やかな商業イラスト（アニメ寄り）',
+   en:'A polished contemporary Japanese commercial illustration, the look of a high-end poster or book cover. Confident inked linework over vivid digital painting. The face is drawn, not rendered: large luminous eyes built from clear outlines, sharp individual eyelash strokes and several bright highlight points, a nose simplified to a few strokes, a small drawn mouth. The hair is drawn as bold sweeping grouped masses of solid black with hard glossy sheen running through them, that sheen a lighter reflection of the same neutral black — never a different colour, never blue, navy, indigo, purple, grey, white or silver. Crisp rim light around the figure. Behind her, angular geometric shards of colour, splashes and flecks of gold leaf, and decorative gold-outlined motifs float across a bright ground'},
+  {id:'ink_wc', jp:'水彩と墨の飛沫',
+   en:'A painterly illustration in loose watercolour washes with splattered ink and flicked pigment, gold leaf flecks caught in the wash, bare white paper showing through in places, botanical and decorative elements bleeding softly into the background, bright saturated accents against a pale ground'},
+  {id:'nihonga', jp:'日本画風',
+   en:'A nihonga-style painting: flat mineral pigment colour, visible washi paper texture, fine ink outlines, gold leaf passages, no cast shadows and no photographic depth'},
+  {id:'yamatoe', jp:'大和絵・つくり絵風',
+   en:'In the manner of yamato-e tsukuri-e painting: opaque mineral pigment laid thickly over ink underdrawing, flat perspective, decorative flattened space, stylised gold cloud bands'},
+  {id:'emaki', jp:'絵巻風（引目鉤鼻）',
+   en:'In the manner of a Heian illustrated handscroll: the face drawn in the hikime-kagibana convention as a single fine line for each eye and a small hook for the nose, seen from above through a roofless fukinuki-yatai interior, flat decorative space, mineral pigment on paper'},
+  {id:'modern_illust', jp:'現代的なイラストレーション',
+   en:'A clean contemporary illustration with confident linework, flat and gently graded colour, stylised features, poster-like composition'},
+  {id:'realistic', jp:'写実的なポートレート',
+   en:'A richly detailed painterly portrait with photographic realism in the face and skin, ornamental and decorative in everything around her'}
+];
+
+/* 顔だけ精度が上がるのを止める ── 写実以外で常時挿入 */
+const FACE_PARITY =
+  'Detail parity is essential: the face must carry NO more detail, sharpness or finish than the robes and the background around it. ' +
+  'Whatever level of simplification the garments are drawn at, the face is drawn at exactly that same level — if the silks are rendered as flat shapes with clean edges, the face is rendered that way too. ' +
+  'The face is never the sharpest, smoothest or most finely modelled thing in the picture. Judge it by asking whether the face and the sleeve beside it look like they were painted in the same pass.';
+
+/* 色調 */
+const TONE = [
+  {id:'t_bright', rec:1, jp:'明るく華やか', hint:'初期値。白と金を効かせた高明度',
+   en:'Colour key: high-key and luminous throughout. A bright, near-white ground flooded with light; clear saturated colour — rose, lavender, coral, gold; clean strong contrast; gold leaf catching the light across the image. The whole picture reads bright and airy, never dim, muddy or heavy'},
+  {id:'t_calm', jp:'落ち着いた', hint:'くすんだ中間色',
+   en:'Colour key: calm and restrained, a dusty muted palette of soft neutrals at low contrast'},
+  {id:'t_deep', jp:'陰影の強い', hint:'濃い色と強い明暗',
+   en:'Colour key: deep and dramatic, richly saturated darks with strong pools of light and heavy chiaroscuro'}
+];
+
+/* 躍動感 */
+const MOTION = [
+  {id:'m_still', jp:'静かに', hint:'落ち着いた佇まい',
+   en:'Everything in the image is still and composed'},
+  {id:'m_flow', rec:1, jp:'流れる', hint:'初期値。髪と衣が動く',
+   en:'Movement runs through the image: her long hair lifts and streams out in flowing masses, the wide sleeves and layered hems swing and billow, blossom and leaves drift past her'},
+  {id:'m_burst', jp:'大きく動く', hint:'花びらと金箔が舞う',
+   en:'The image is full of dynamic movement: her hair sweeps out in a wide arc, the robes flare and stream right across the frame, petals, leaves and flecks of gold leaf burst and swirl through the air, sharp diagonal shards of colour cut through the background, strong directional energy everywhere'}
+];
+
+/* デフォルメの度合い ── 初期値は「ほどよく」。顔だけが写真に見えないよう、背景と同じ絵具で描く指示が入ります */
+const DEFORM = [
+  {id:'d1', jp:'ひかえめ', hint:'写実寄り。人物の実在感を残す',
+   en:'Stylisation is light: realistic proportions and anatomy, the face softly painted rather than drawn. Even so, the face must be painted in the same medium and with the same hand as the rest of the image — never a photographic face placed inside an illustration'},
+  {id:'d2', rec:1, jp:'ほどよく', hint:'半写実のイラスト。参照画像はこの辺り',
+   en:'Semi-realistic painted illustration. The proportions and anatomy of the face stay realistic, but it is painted, not photographed: smooth painted skin with no pores or skin texture, the eyes and lips built from visible brushwork and linework, shading drawn by hand rather than lit photographically, no wet photographic catchlights in the eyes, no subsurface glow in the skin. Critically, the face is rendered in exactly the same medium, palette and level of finish as the background — the figure and the setting must look painted by the same hand, with no seam between them. Her hair is drawn as flat grouped masses of solid black, shaped with a slightly deeper neutral black for shadow, not as individually rendered photographic strands and not with pale highlight streaks. Her skin and lips are matte, with no gloss or sheen'},
+  {id:'d3', jp:'しっかり', hint:'アニメ寄りのイラスト',
+   en:'Strongly stylised, anime-influenced illustration. The face is fully drawn, not rendered: large clearly outlined eyes with defined eyelash linework, a simplified nose reduced to a few strokes, a small drawn mouth, flat cel-like shading with minimal gradation, bold confident outlines throughout. The likeness is carried by the shape of the features, not by photographic detail. Her hair is drawn as flat grouped masses of solid black, shaped with a slightly deeper neutral black for shadow, never with pale highlight streaks. Her skin and lips are matte, with no gloss or sheen'}
+];
+
+/* 参照画像をどこまで効かせるか ── 似顔と画風の綱引き */
+const REFMODE = [
+  {id:'ref_strong', jp:'写真の顔をそのまま使う', hint:'最も似るが、写真の質感まで付いてくる',
+   en:'Use the face in the attached reference photograph and keep her likeness closely recognisable'},
+  {id:'ref_mid', rec:1, jp:'本人に似せたイラストにする', hint:'初期値。似ているが、絵として成立する',
+   en:'She must be clearly and unmistakably recognisable as the same woman as in the attached photograph — the likeness matters and must not be lost. But carry that likeness across as DRAWING, not as photography. Read from the photograph only the structure of her face: the proportions and shapes of her eyes, eyelids, nose, mouth, cheekbones and jawline, and the particular way those shapes sit together. Do not carry over the photograph\'s lighting, its skin rendering, its sharpness or any of its photographic quality. Redraw the face completely from scratch in the illustration medium described above, exactly as a portrait painter working from a photograph would: the finished face is a painting that looks like her, never the photograph retouched or pasted in'},
+  {id:'ref_loose', jp:'雰囲気だけ', hint:'画風は最も安定するが、似なくなる',
+   en:'Take only a loose general impression of her face from the attached photograph. The finished face should be an original drawn face in the illustration style described above, merely reminiscent of her'}
+];
+
+const BROWS = [
+  {id:'modern', rec:1, jp:'現代風の眉・自然な肌', hint:'参照画像の印象が残ります',
+   en:'Her eyebrows are natural, softly shaped in the modern way, in their normal position above the eyes. Her skin is her own natural tone, lightly and beautifully made up, not whitened'},
+  {id:'heian', jp:'引眉・白粉（平安の作法）', hint:'考証に忠実ですが、印象が大きく変わります',
+   en:'Her natural eyebrows are removed and soft smudged brows are painted high on the forehead in the hikimayu manner, and her face is powdered white in the Heian court manner'}
+];
+
+const TYPESET = [
+  {id:'tate', jp:'縦書き', en:'set vertically down one side of the image in elegant Japanese calligraphy'},
+  {id:'chirashi', rec:1, jp:'散らし書き', en:'set in the scattered chirashi-gaki manner, the lines starting at varying heights'},
+  {id:'kindei', jp:'金泥', en:'written in gold pigment'},
+  {id:'sumi', jp:'墨書き', en:'written in black ink with a soft brush'}
+];
+
+const AR = [
+  {id:'ar34', jp:'3:4（縦）', en:'--ar 3:4'},
+  {id:'ar23', jp:'2:3（縦長）', en:'--ar 2:3'},
+  {id:'ar11', jp:'1:1（正方形）', en:'--ar 1:1'},
+  {id:'ar169', jp:'16:9（横）', en:'--ar 16:9'}
+];
+
+/* 常に入る平安の約束事 */
+const CONSTANT_POSITIVE =
+  'Her hair is a single uniform jet black from root to tip — no grey, white, silver, ashen or lightened strands anywhere in it, and no greying at the roots or temples; the hair is a true neutral black and stays black everywhere: the sheen on it is simply a slightly lighter reflection of that same black, with no shift of colour at all. The hair is never blue, navy, indigo, purple, brown or grey. It is absolutely straight, unbound and hanging loose past her feet in the suberakashi manner, ' +
+  'parted by a single dead-straight centre parting that begins at the exact middle of her forehead and runs straight back over the crown, so that equal masses of hair fall symmetrically down each side of her face; the parting is never off to one side. There is no fringe and no hair falling across the brow; her forehead and hairline are fully exposed. ' +
+  'All robes are wide-sleeved, cross the body left over right, and hang loose and completely unfastened — no belt, sash, cord, tie, tassel or clasp anywhere on them, the layers held only by their own weight and the way they are wrapped; the graduated colours of each separate layer are visible in a stack at the collar, at the cuff and at the hem. ' +
+  'The silks are figured woven damask, the pattern formed in the weave itself, never printed on the surface. ' +
+  'Her body reads as one coherent figure: head, shoulders, arms and hands in a single consistent position, each sleeve clearly containing the arm inside it, both hands correctly formed, and the robes falling in an unbroken line from her shoulders down to the trailing hem, with no gap or seam between the figure and her own skirts. Heian period Japan, eleventh century, Fujiwara court.';
+
+const CONSTANT_NEGATIVE =
+  'Negative prompt: obi sash, any sash or belt at the waist, decorative cord or braid tied across the chest, haori-himo, ' +
+  'tassels or toggles fastening the robes, any visible fastening at the front, brooch or clasp, ' +
+  'uchikake, kosode, kimono with a narrow overlapping collar, ' +
+  'hair ornaments, kanzashi, combs, flowers in the hair, any pinned or piled or tied-up hairstyle, ponytail, bun, ' +
+  'blue hair, navy hair, indigo hair, purple hair, coloured hair, brown hair, grey hair, white hair, silver hair, ashen strands, salt-and-pepper hair, greying roots or temples, streaked or highlighted hair, brown or lightened hair, ' +
+  'bangs, fringe, hair across the forehead, side parting, off-centre parting, asymmetric hair, layered or feathered modern haircut, curled or wavy hair, ' +
+  'cropped top of head, head cut off by the frame, head touching the frame edge, broken or twisted anatomy, impossible torso, disconnected or floating limbs, extra arms, extra hands, malformed hands, ' +
+  'robes detached from the body, skirts lying separately on the floor, ' +
+  'a long outermost robe reaching to the knees or below, all garments the same length, ' +
+  'cuffed or gathered sleeve openings, printed or dyed surface patterns, geisha, maiko, oiran, samurai, Edo period dress, ' +
+  'Chinese hanfu, Korean hanbok, cheongsam, modern clothing, bare shoulders, tight-fitting garments, exposed neckline.';
+
+/* 画風によって足す打ち消し */
+const NEG_ILLUST = ' face rendered in more detail than the rest of the image, sharper face than surroundings, photorealistic, photograph, 3D render, CGI, hyperreal skin texture, visible pores, waxy skin, uncanny valley, ' +
+  'photographic face on an illustrated body, face taken from a photograph, composited or cut-out figure, ' +
+  'studio portrait lighting on the face, airbrushed skin, glossy skin, glossy lips, wet catchlights in the eyes, ' +
+  'individually rendered hair strands, photographic sheen on the hair.';
+
+/* ============================================================
+   状態
+   ============================================================ */
+const S = {
+  person:null, rank:null, season:null, irome:null,
+  monyo:[], scene:null, style:'collage', deform:'d2', tone:'t_bright', motion:'m_flow', framing:'knee', hands:'h_sleeve', angle:null, expr:null, mood:null,
+  refmode:'ref_mid', brow:'modern', face:['clear','nose','porcelain'], motif:[], motifset:[], comp:null, decor:[], fx:[], typeset:null, ar:null
+};
+const byId = (arr,id)=>arr.find(x=>x.id===id);
+let batchMode = false;
+let TITLE_OVERRIDE = null;
+
+/* ============================================================
+   描画
+   ============================================================ */
+function chip(label, pressed, disabled, sub, why, extraClass){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='chip'+(extraClass?' '+extraClass:'');
+  b.setAttribute('aria-pressed', pressed?'true':'false');
+  if(disabled) b.disabled=true;
+  b.innerHTML = label
+    + (sub?`<span class="${extraClass==='person'?'tier':'en'}">${sub}</span>`:'')
+    + (why?`<span class="why">${why}</span>`:'');
+  return b;
+}
+
+function renderPeople(){
+  const g=document.getElementById('g-person'); g.innerHTML='';
+  PEOPLE.forEach(p=>{
+    const b=chip(p.jp, S.person===p.id, false, TIERS[p.tier].jp, null, 'person');
+    b.onclick=()=>{ S.person = (S.person===p.id?null:p.id); applyPersonDefaults(); renderAll(); };
+    g.appendChild(b);
+  });
+}
+
+function applyPersonDefaults(){
+  const p = S.person?byId(PEOPLE,S.person):null;
+  if(!p) return;
+  if(!S.mood) S.mood = p.mood;
+  if(!S.expr) S.expr = p.expr;
+  // 装束の格が身分に合わなくなったら外す
+  if(S.rank && !rankOk(byId(RANKS,S.rank), p).ok) S.rank=null;
+}
+
+function rankOk(r, p){
+  if(!p) return {ok:true};
+  if(r.only && !r.only.includes(p.id)) return {ok:false, why:r.deny};
+  if(!r.tiers.includes(p.tier)) return {ok:false, why:r.deny};
+  return {ok:true};
+}
+
+function renderRanks(){
+  const g=document.getElementById('g-rank'); g.innerHTML='';
+  const p = S.person?byId(PEOPLE,S.person):null;
+  RANKS.forEach(r=>{
+    const st = rankOk(r,p);
+    const b=chip(r.jp, S.rank===r.id, !st.ok, null, st.ok?null:st.why);
+    b.onclick=()=>{ S.rank=(S.rank===r.id?null:r.id); renderAll(); };
+    g.appendChild(b);
+  });
+}
+
+function renderSeasons(){
+  const g=document.getElementById('g-season'); g.innerHTML='';
+  SEASONS.forEach(s=>{
+    const b=chip(s.jp, S.season===s.id, false);
+    b.onclick=()=>{
+      S.season=(S.season===s.id?null:s.id);
+      if(S.irome){ const i=byId(IROME,S.irome); if(i.s!=='all' && i.s!==S.season) S.irome=null; }
+      renderAll();
+    };
+    g.appendChild(b);
+  });
+}
+
+function renderIrome(){
+  const g=document.getElementById('g-irome'); g.innerHTML='';
+  const p = S.person?byId(PEOPLE,S.person):null;
+  const list = IROME.filter(i => !S.season || i.s===S.season || i.s==='all');
+  if(!S.season){
+    const m=document.createElement('p');
+    m.className='note'; m.style.margin='0';
+    m.textContent='季節を選ぶと色目が現れます。';
+    g.appendChild(m); return;
+  }
+  list.forEach(i=>{
+    const fav = p && p.irome.includes(i.id);
+    const b=chip((fav?'★ ':'')+i.jp, S.irome===i.id, false, i.en);
+    b.onclick=()=>{ S.irome=(S.irome===i.id?null:i.id); renderAll(); };
+    g.appendChild(b);
+  });
+}
+
+function renderMulti(elId, data, key, favKey){
+  const g=document.getElementById(elId); g.innerHTML='';
+  const p = S.person?byId(PEOPLE,S.person):null;
+  data.forEach(d=>{
+    const fav = favKey && p && p[favKey] && p[favKey].includes(d.id);
+    const b=chip((d.rec?'◎ ':'')+(fav?'★ ':'')+d.jp, S[key].includes(d.id), false, d.en);
+    b.onclick=()=>{
+      const i=S[key].indexOf(d.id);
+      if(i>=0) S[key].splice(i,1); else S[key].push(d.id);
+      renderAll();
+    };
+    g.appendChild(b);
+  });
+}
+
+function renderSingle(elId, data, key, subFn){
+  const g=document.getElementById(elId); g.innerHTML='';
+  data.forEach(d=>{
+    const b=chip((d.rec?'◎ ':'')+d.jp, S[key]===d.id, false, subFn?subFn(d):null);
+    b.onclick=()=>{ S[key]=(S[key]===d.id?null:d.id); renderAll(); };
+    g.appendChild(b);
+  });
+}
+
+/* ============================================================
+   プロンプト生成
+   ============================================================ */
+function val(id){ return (document.getElementById(id).value||'').trim(); }
+
+function build(){
+  if(!S.person) return '';
+  const p = byId(PEOPLE,S.person);
+  const out=[];
+
+  out.push((S.style ? byId(STYLES,S.style).en : byId(STYLES,'collage').en) + '.');
+  if(S.deform && S.style!=='emaki') out.push(byId(DEFORM,S.deform).en + '.');
+  if(S.style!=='realistic') out.push(FACE_PARITY);
+  if(S.tone) out.push(byId(TONE,S.tone).en + '.');
+
+  // 文字 ── 前に出し、置き場所を確保させる
+  const cm=(TITLE_OVERRIDE || val('copy-main')), cs=val('copy-sub');
+  if(cm||cs){
+    let t='IMPORTANT — Japanese typography must appear in this image. Reserve a clear, calm, uncluttered area of the composition, well away from the figure, and set the following Japanese text there as elegant typographic design, rendered exactly and correctly character for character';
+    if(S.typeset) t += ', ' + byId(TYPESET,S.typeset).en;
+    if(cm) t += '. Main line: 「' + cm + '」';
+    if(cs) t += '. Second line, smaller: 「' + cs + '」';
+    t += '. Do not let the background decoration, falling leaves or gold leaf cover or crowd this text';
+    out.push(t + '.');
+  }
+
+  // 主体
+  let subj = 'Subject: a Heian-period Japanese noblewoman ' + TIERS[p.tier].en + ' — ' + p.en;
+  const moodParts=[];
+  if(S.mood) moodParts.push(byId(MOOD,S.mood).en);
+  if(val('mood-free')) moodParts.push(val('mood-free'));
+  if(moodParts.length) subj += '. Her overall impression is ' + moodParts.join(', ');
+  out.push(subj + '.');
+
+  // 顔
+  const faceBits=[];
+  if(document.getElementById('use-ref').checked){
+    faceBits.push(byId(REFMODE, S.refmode || 'ref_mid').en + '. Reconstruct her as this Heian noblewoman — pose, angle and expression rebuilt to suit the scene');
+  }
+  if(S.brow) faceBits.push(byId(BROWS,S.brow).en);
+  const fdesc = S.face.map(id=>byId(FACE,id).en);
+  if(val('face-free')) fdesc.push(val('face-free'));
+  if(fdesc.length) faceBits.push('Her face: ' + fdesc.join(', '));
+  if(faceBits.length) out.push(faceBits.join('. ') + '.');
+
+  // 装束
+  if(S.rank){
+    let c = 'Costume: she is ' + byId(RANKS,S.rank).en;
+    if(S.irome) c += ', the layers graduated in the kasane-no-irome combination of ' + byId(IROME,S.irome).en;
+    if(S.monyo.length) c += ', the silk figured with ' + S.monyo.map(id=>byId(MONYO,id).en).join(' and ');
+    out.push(c + '.');
+  }
+
+  out.push(CONSTANT_POSITIVE);
+
+  // 場面・季節・アングル・表情
+  const sc=[];
+  if(S.scene) sc.push(byId(SCENES,S.scene).en);
+  if(S.season) sc.push('the season is ' + byId(SEASONS,S.season).en);
+  if(sc.length) out.push('Scene: ' + sc.join(', ') + '.');
+
+  const po=[];
+  if(S.framing) po.push(byId(FRAMING,S.framing).en);
+  if(S.angle) po.push(byId(ANGLES,S.angle).en);
+  if(S.hands && byId(HANDS,S.hands).en) po.push(byId(HANDS,S.hands).en);
+  if(S.expr) po.push(byId(EXPR,S.expr).en);
+  if(po.length) out.push('Pose: ' + po.join(', ') + '.');
+
+  const mo = S.motif.map(id=>byId(MOTIFS,id).en)
+    .concat(S.motifset.flatMap(id=>byId(MOTIF_SETS,id).en.split(', ')))
+    .map(x=>x.trim())
+    .filter((v,i,a)=>a.findIndex(w=>w.toLowerCase()===v.toLowerCase())===i);
+  if(mo.length) out.push('Also present in the image: ' + mo.join(', ') + '.');
+  if(S.motion) out.push(byId(MOTION,S.motion).en + '.');
+  if(S.comp) out.push(byId(COMPOSITION,S.comp).en + '.');
+
+  // 装飾
+  const dec=[];
+  if(S.decor.length) dec.push(S.decor.map(id=>byId(DECOR,id).en).join(', '));
+  if(val('color-free')) dec.push('the overall colour key is ' + val('color-free'));
+  if(S.fx.length) dec.push(S.fx.map(id=>byId(FX,id).en).join(', '));
+  if(dec.length) out.push('Decoration and finish: ' + dec.join('; ') + '.');
+
+  out.push(CONSTANT_NEGATIVE + (S.style && S.style!=='realistic' ? NEG_ILLUST : ''));
+
+  const arFree = val('ar-free');
+  if(arFree) out.push(arFree);
+  else if(S.ar) out.push(byId(AR,S.ar).en);
+
+  return out.join('\n\n');
+}
+
+function renderOut(){
+  if(batchMode) return;
+  const t=build();
+  document.getElementById('prompt').textContent=t;
+  document.getElementById('count').textContent = t.length + ' 文字';
+}
+
+/* ============================================================
+   まとめて再描画
+   ============================================================ */
+function renderAll(){
+  batchMode = false;
+  renderPeople();
+  renderRanks();
+  renderSeasons();
+  renderIrome();
+  renderMulti('g-monyo', MONYO, 'monyo');
+  renderSingle('g-scene', SCENES, 'scene');
+  renderSingle('g-style', STYLES, 'style');
+  renderSingle('g-deform', DEFORM, 'deform', d=>d.hint);
+  renderSingle('g-tone', TONE, 'tone', d=>d.hint);
+  renderSingle('g-motion', MOTION, 'motion', d=>d.hint);
+  renderSingle('g-framing', FRAMING, 'framing', d=>d.hint);
+  renderSingle('g-angle', ANGLES, 'angle', d=>d.hint);
+  renderSingle('g-hands', HANDS, 'hands', d=>d.hint);
+  renderSingle('g-expr', EXPR, 'expr');
+  renderSingle('g-mood', MOOD, 'mood');
+  renderSingle('g-refmode', REFMODE, 'refmode', d=>d.hint);
+  renderSingle('g-brow', BROWS, 'brow', d=>d.hint);
+  renderMulti('g-face', FACE, 'face');
+  renderMulti('g-motif', MOTIFS, 'motif', 'motif');
+  renderMulti('g-motifset', MOTIF_SETS, 'motifset');
+  renderSingle('g-comp', COMPOSITION, 'comp');
+  renderMulti('g-decor', DECOR, 'decor');
+  renderMulti('g-fx', FX, 'fx');
+  renderSingle('g-type', TYPESET, 'typeset');
+  renderSingle('g-ar', AR, 'ar');
+  const now = document.getElementById('now-p');
+  if(now){
+    const p = S.person ? byId(PEOPLE,S.person) : null;
+    now.textContent = p ? p.jp : 'ヒロインが選ばれていません';
+    now.className = p ? 'now' : 'now none';
+  }
+  renderOut();
+}
+
+['mood-free','face-free','color-free','copy-main','copy-sub','ar-free']
+  .forEach(id=>document.getElementById(id).addEventListener('input', renderOut));
+document.getElementById('use-ref').addEventListener('change', renderOut);
+
+/* ============================================================
+   操作
+   ============================================================ */
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+document.getElementById('btn-rand').onclick=()=>{
+  const p = pick(PEOPLE);
+  S.person = p.id;
+  const ok = RANKS.filter(r=>rankOk(r,p).ok);
+  S.rank = pick(ok).id;
+  S.season = pick(SEASONS).id;
+  const iro = IROME.filter(i=>i.s===S.season||i.s==='all');
+  S.irome = (Math.random()<0.65 && p.irome.some(id=>iro.find(x=>x.id===id)))
+    ? pick(p.irome.filter(id=>iro.find(x=>x.id===id)))
+    : pick(iro).id;
+  S.monyo = [pick(MONYO).id];
+  S.scene = pick(SCENES).id;
+  S.style = pick(['collage','shoujo','ink_wc','nihonga','yamatoe','modern_illust']);
+  S.deform = pick(['d1','d2','d2','d3']);
+  S.tone = pick(['t_bright','t_bright','t_calm','t_deep']);
+  S.motion = pick(['m_flow','m_flow','m_burst','m_still']);
+  S.brow = 'modern';
+  S.framing = pick(['knee','knee','bust','full']);
+  S.hands = pick(['h_sleeve','h_sleeve','h_fan','h_hold']);
+  S.angle = pick(ANGLES).id;
+  S.expr = pick(EXPR).id;
+  S.mood = p.mood;
+  S.face = ['clear','nose','porcelain'];
+  S.motif = p.motif.slice();
+  S.motifset = [pick(MOTIF_SETS).id];
+  S.comp = Math.random()<0.4 ? pick(COMPOSITION).id : null;
+  S.decor = [pick(DECOR).id, pick(DECOR).id].filter((v,i,a)=>a.indexOf(v)===i);
+  S.fx = [pick(FX).id];
+  S.ar = 'ar34';
+  renderAll();
+  document.getElementById('prompt').scrollIntoView({behavior:'smooth', block:'center'});
+};
+
+document.getElementById('btn-reset').onclick=()=>{
+  Object.assign(S,{person:null,rank:null,season:null,irome:null,monyo:[],scene:null,
+    style:'collage',deform:'d2',tone:'t_bright',motion:'m_flow',framing:'knee',hands:'h_sleeve',angle:null,expr:null,mood:null,refmode:'ref_mid',brow:'modern',
+    face:['clear','nose','porcelain'],motif:[],motifset:[],comp:null,decor:[],fx:[],typeset:null,ar:null});
+  ['mood-free','face-free','color-free','copy-main','copy-sub','ar-free']
+    .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('use-ref').checked=true;
+  renderAll();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+document.getElementById('btn-copy').onclick=async()=>{
+  const t=document.getElementById('prompt').textContent;
+  if(!t) return;
+  try{ await navigator.clipboard.writeText(t); }
+  catch(e){
+    const ta=document.createElement('textarea');
+    ta.value=t; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  const s=document.getElementById('said');
+  s.classList.add('on');
+  setTimeout(()=>s.classList.remove('on'),1600);
+};
+
+/* ============================================================
+   ヒロインの差し替え ── 見た目の設定はそのまま
+   ============================================================ */
+function applySwap(id){
+  S.person = id;
+  const p = byId(PEOPLE,id);
+
+  // 装束の格 ── 今の格が身分に合わなければ、着られるもので最も近いものへ
+  if(!S.rank || !rankOk(byId(RANKS,S.rank), p).ok){
+    const prefer = ['kouchigi','uchiki','karaginumo','kinjiki','ke'];
+    const found = prefer.map(r=>byId(RANKS,r)).find(r=>rankOk(r,p).ok)
+               || RANKS.find(r=>rankOk(r,p).ok);
+    S.rank = found ? found.id : null;
+  }
+  // 重ねの色目と季節 ── 色は人物のものなので付いて動く
+  const iro = byId(IROME, p.irome[0]);
+  if(iro){ S.irome = iro.id; if(iro.s !== 'all') S.season = iro.s; }
+  // 人物に結びついたもの
+  S.motif = p.motif.slice();
+  S.mood  = p.mood;
+  S.expr  = p.expr;
+}
+
+const RECIPE = {
+  style:'shoujo', deform:'d2', tone:'t_bright', motion:'m_flow',
+  refmode:'ref_mid', brow:'modern', framing:'knee', angle:'high',
+  hands:'h_sleeve', typeset:'chirashi', face:['clear','nose','porcelain']
+};
+function applyRecipe(){
+  Object.keys(RECIPE).forEach(k=>{
+    S[k] = Array.isArray(RECIPE[k]) ? RECIPE[k].slice() : RECIPE[k];
+  });
+  document.getElementById('use-ref').checked = true;
+  batchMode = false;
+  renderAll();
+}
+
+function stepPerson(d){
+  const i = S.person ? PEOPLE.findIndex(x=>x.id===S.person) : -1;
+  const n = (i + d + PEOPLE.length) % PEOPLE.length;
+  applySwap(PEOPLE[(i<0 ? (d>0?0:PEOPLE.length-1) : n)].id);
+  batchMode = false;
+  renderAll();
+  document.getElementById('prompt').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function buildAll(){
+  const snap = JSON.parse(JSON.stringify(S));
+  const hasCopy = !!val('copy-main');
+  const parts = PEOPLE.map(p=>{
+    applySwap(p.id);
+    if(!hasCopy) TITLE_OVERRIDE = '源氏物語　' + p.jp.replace(/（.*）/,'');
+    const body = build();
+    TITLE_OVERRIDE = null;
+    return '━━━━━━ ' + p.jp + ' ━━━━━━\n\n' + body;
+  });
+  Object.assign(S, snap);
+  return parts.join('\n\n\n');
+}
+
+document.getElementById('rec-btn').onclick = ()=>{
+  applyRecipe();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+document.getElementById('prev-p').onclick = ()=>stepPerson(-1);
+document.getElementById('next-p').onclick = ()=>stepPerson(1);
+document.getElementById('all-p').onclick = ()=>{
+  if(!S.person) applySwap(PEOPLE[0].id);
+  const t = buildAll();
+  batchMode = true;
+  document.getElementById('prompt').textContent = t;
+  document.getElementById('count').textContent = t.length + ' 文字（15人分）';
+  document.getElementById('prompt').scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+/* ============================================================
+   項目ごとのランダム
+   ============================================================ */
+const RAND = {
+  person(){ S.person=pick(PEOPLE).id; applyPersonDefaults();
+            const p=byId(PEOPLE,S.person);
+            if(S.rank && !rankOk(byId(RANKS,S.rank),p).ok) S.rank=null; },
+  rank(){ const p=S.person?byId(PEOPLE,S.person):null;
+          S.rank=pick(RANKS.filter(r=>rankOk(r,p).ok)).id; },
+  irome(){ if(!S.season) S.season=pick(SEASONS).id;
+           S.irome=pick(IROME.filter(i=>i.s===S.season||i.s==='all')).id; },
+  monyo(){ S.monyo=[pick(MONYO).id]; },
+  scene(){ S.scene=pick(SCENES).id; },
+  style(){ S.style=pick(STYLES).id; S.deform=pick(['d1','d2','d2','d3']);
+           S.tone=pick(['t_bright','t_bright','t_calm','t_deep']);
+           S.motion=pick(['m_flow','m_flow','m_burst','m_still']); },
+  pose(){ S.framing=pick(['knee','knee','bust','full']);
+          S.angle=pick(ANGLES).id;
+          S.hands=pick(['h_sleeve','h_sleeve','h_fan','h_hold']); },
+  expr(){ S.expr=pick(EXPR).id; S.mood=pick(MOOD).id; },
+  face(){ const base=['clear','nose','porcelain'];
+          const extra=FACE.filter(f=>!base.includes(f.id));
+          S.face = Math.random()<0.5 ? base.slice() : base.concat(pick(extra).id); },
+  motif(){ const p=S.person?byId(PEOPLE,S.person):null;
+           S.motif = p ? p.motif.slice() : [pick(MOTIFS).id]; },
+  motifset(){ S.motifset=[pick(MOTIF_SETS).id]; },
+  comp(){ S.comp=pick(COMPOSITION).id; },
+  decor(){ S.decor=[pick(DECOR).id,pick(DECOR).id].filter((v,i,a)=>a.indexOf(v)===i);
+           S.fx=[pick(FX).id]; }
+};
+
+const GRID2RAND = {
+  'g-person':'person','g-rank':'rank','g-season':'irome','g-monyo':'monyo',
+  'g-scene':'scene','g-style':'style','g-framing':'pose','g-expr':'expr',
+  'g-refmode':'face','g-motif':'motif','g-motifset':'motifset','g-comp':'comp',
+  'g-decor':'decor'
+};
+
+document.querySelectorAll('section').forEach(sec=>{
+  const grid = sec.querySelector('.grid[id]');
+  if(!grid) return;
+  const key = GRID2RAND[grid.id];
+  if(!key) return;
+  const b=document.createElement('button');
+  b.type='button'; b.className='mini'; b.textContent='この項目だけランダム';
+  b.onclick=()=>{ RAND[key](); renderAll(); };
+  sec.querySelector('.sec-head').appendChild(b);
+});
+
+renderAll();
+</script>
+</body>
+</html>
