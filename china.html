@@ -3,24 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ヨーロッパの女帝と王妃たち ヒロインプロンプトビルダー</title>
+<title>中国の傾国の美女たち ヒロインプロンプトビルダー</title>
 <style>
   :root{
     --title-font:"HGエレガント平成明朝体W3","HG Elegant Heisei Mincho W3","Hiragino Mincho ProN","Yu Mincho",serif;
     --body-font:"Hiragino Kaku Gothic ProN","Yu Gothic Medium","Yu Gothic",Meiryo,"Helvetica Neue",Arial,sans-serif;
-    --bg:#fdf0f4;
-    --panel:#fffbfc;
-    --ink:#4a2438;
-    --sub:#93707e;
+    --bg:#eaf6f0;
+    --panel:#fbfffd;
+    --ink:#173328;
+    --sub:#6a8d7f;
     --gold:#cbab6e;
     --gold-deep:#a9854a;
-    --magenta:#c2185b;
-    --magenta-deep:#94103f;
-    --rose:#e07ba0;
-    --line:#f3d9e4;
-    --chip:#fdf3f7;
-    --chip-active:#c2185b;
-    --chip-active-ink:#fff5f8;
+    --magenta:#1a8a5e;
+    --magenta-deep:#0f5c42;
+    --rose:#4fae86;
+    --line:#cfe9df;
+    --chip:#f1faf6;
+    --chip-active:#1a8a5e;
+    --chip-active-ink:#f2fff8;
   }
   *{box-sizing:border-box;}
   body{
@@ -34,7 +34,7 @@
     padding:28px 20px 18px;
     text-align:center;
     border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg,#fff8ec,var(--bg));
+    background:linear-gradient(180deg,#f4fcf9,var(--bg));
   }
   header h1{
     margin:0 0 6px;
@@ -58,7 +58,7 @@
     border-radius:10px;
     padding:16px 18px;
     margin-bottom:16px;
-    box-shadow:0 1px 3px rgba(148,16,63,.05);
+    box-shadow:0 1px 3px rgba(15,92,66,.05);
   }
   section.card h2{
     margin:0 0 4px;
@@ -84,7 +84,7 @@
     transition:background .15s,color .15s,border-color .15s;
     line-height:1.3;
   }
-  .chip:hover{background:#f7e0ea;border-color:var(--magenta);}
+  .chip:hover{background:#e4f5ee;border-color:var(--magenta);}
   .chip.active{background:var(--chip-active);color:var(--chip-active-ink);border-color:var(--chip-active);}
   .chip.star::after{content:" ★";color:var(--gold-deep);}
   .chip.active.star::after{color:#ffe3ba;}
@@ -105,7 +105,7 @@
   button.big{
     border:1px solid var(--magenta);
     background:var(--magenta);
-    color:#fff5f8;
+    color:#f2fff8;
     padding:9px 18px;
     border-radius:999px;
     font-size:.85rem;
@@ -133,14 +133,14 @@
     border:1px solid var(--gold-deep);background:#fff;color:var(--gold-deep);
     padding:6px 12px;border-radius:999px;font-size:.78rem;cursor:pointer;
   }
-  .out-buttons button.primary{background:var(--magenta);border-color:var(--magenta);color:#fff5f8;}
+  .out-buttons button.primary{background:var(--magenta);border-color:var(--magenta);color:#f2fff8;}
 </style>
 </head>
 <body>
 <header>
-  <h1>ヨーロッパの女帝と王妃たち ヒロインプロンプトビルダー</h1>
-  <p>マリー・アントワネット、マリア・テレジア、エカチェリーナ2世、ジョゼフィーヌ、エリザベート（シシィ）を対象にした、AI画像生成用プロンプトの組み立てツールです。（18〜19世紀ヨーロッパ編／全13人シリーズより5人）</p>
-  <p style="margin-top:10px;font-size:.8rem;"><a href="england.html" style="color:var(--magenta-deep);">→ イギリス編</a>　<a href="china.html" style="color:var(--magenta-deep);">→ 中国編</a> はこちら</p>
+  <h1>中国の傾国の美女たち ヒロインプロンプトビルダー</h1>
+  <p>虞美人、王昭君、則天武后、楊貴妃、西太后を対象にした、AI画像生成用プロンプトの組み立てツールです。（中国編／秦漢〜唐〜清）</p>
+  <p style="margin-top:10px;font-size:.8rem;"><a href="index.html" style="color:var(--magenta-deep);">→ ヨーロッパ編はこちら</a>　<a href="england.html" style="color:var(--magenta-deep);">→ イギリス編はこちら</a></p>
 </header>
 
 <div class="wrap">
@@ -171,132 +171,121 @@
 /* ---------- データ ---------- */
 
 const HEROINES = [
-  {id:'ma1', group:'marie', label:'マリー・アントワネット（ヴェルサイユ本宮、王妃としての正装）',
-   base:'Marie Antoinette, Queen of France, in full formal splendor at the Palace of Versailles',
-   defCostume:'ma_c1', defPalette:'p_rose', defExpr:'e_noble', defMotifs:['mo_pearl','mo_fan']},
-  {id:'ma2', group:'marie', label:'マリー・アントワネット（プティ・トリアノン、牧歌趣味の日々）',
-   base:'Marie Antoinette at the Petit Trianon, in her pastoral retreat away from the court',
-   defCostume:'ma_c3', defPalette:'p_mint', defExpr:'e_bright', defMotifs:['mo_sheep','mo_bird']},
-  {id:'ma3', group:'marie', label:'マリー・アントワネット（仮面舞踏会の宵）',
-   base:'Marie Antoinette at a masked ball, a night of disguise and intrigue',
-   defCostume:'ma_c4', defPalette:'p_lilac', defExpr:'e_fan', defMotifs:['mo_ribbon','mo_cards']},
-  {id:'jo1', group:'josephine', label:'ジョゼフィーヌ（戴冠式後、皇后としての正装）',
-   base:'Empress Josephine of France, in full imperial state dress after her coronation',
-   defCostume:'jo_c2', defPalette:'p_crimson', defExpr:'e_calm', defMotifs:['mo_bee','mo_laurel']},
-  {id:'jo2', group:'josephine', label:'ジョゼフィーヌ（マルメゾン、バラ園の午後）',
-   base:'Empress Josephine in the rose gardens of Malmaison on a quiet afternoon',
-   defCostume:'jo_c4', defPalette:'p_white', defExpr:'e_smile', defMotifs:['mo_rose','mo_swan']},
-  {id:'jo3', group:'josephine', label:'ジョゼフィーヌ（総裁政府時代、ディレクトワールの薄衣）',
-   base:'Josephine in the Directoire years, in the diaphanous fashion of post-revolutionary Paris',
-   defCostume:'jo_c3', defPalette:'p_navy', defExpr:'e_pensive', defMotifs:['mo_pearl2','mo_peacock']},
-  {id:'mt1', group:'maria', label:'マリア・テレジア（若き女帝、即位直後）',
-   base:'Maria Theresa, Empress of Austria, newly ascended to the Habsburg throne',
-   defCostume:'mt_c1', defPalette:'p_habsburg', defExpr:'e_noble', defMotifs:['mo_eagle','mo_crown_mt']},
-  {id:'mt2', group:'maria', label:'マリア・テレジア（シェーンブルン、多くの子に囲まれて）',
-   base:'Maria Theresa, Empress of Austria, surrounded by her many children at Schönbrunn Palace',
-   defCostume:'mt_c2', defPalette:'p_ivory', defExpr:'e_smile', defMotifs:['mo_children']},
-  {id:'mt3', group:'maria', label:'マリア・テレジア（晩年、喪の年月）',
-   base:'Maria Theresa in her later years, in the long mourning that followed her husband\'s death',
-   defCostume:'mt_c3', defPalette:'p_black', defExpr:'e_shadow', defMotifs:['mo_blackfan']},
-  {id:'ca1', group:'catherine', label:'エカチェリーナ2世（戴冠式、帝冠を戴いて）',
-   base:'Catherine the Great, Empress of Russia, crowned in the full splendor of her coronation',
-   defCostume:'ca_c1', defPalette:'p_imperial_ru', defExpr:'e_noble', defMotifs:['mo_crownRu','mo_fireworks']},
-  {id:'ca2', group:'catherine', label:'エカチェリーナ2世（クーデターの夜、近衛の軍服で）',
-   base:'Catherine the Great on the night of the coup, dressed in the uniform of the imperial guard',
-   defCostume:'ca_c2', defPalette:'p_navy', defExpr:'e_gaze', defMotifs:['mo_horse']},
-  {id:'ca3', group:'catherine', label:'エカチェリーナ2世（冬宮殿、書物に囲まれて）',
-   base:'Catherine the Great at the Winter Palace, surrounded by books and the ideas of the Enlightenment',
-   defCostume:'ca_c4', defPalette:'p_imperial_ru', defExpr:'e_calm', defMotifs:['mo_book']},
-  {id:'si1', group:'sisi', label:'エリザベート（宮廷舞踏会、星の髪飾り）',
-   base:'Empress Elisabeth of Austria at a court ball, diamond stars woven through her famously long hair',
-   defCostume:'si_c1', defPalette:'p_ivory', defExpr:'e_gaze', defMotifs:['mo_star']},
-  {id:'si2', group:'sisi', label:'エリザベート（ハンガリーの草原、乗馬服）',
-   base:'Empress Elisabeth riding across the Hungarian plain in a tailored riding habit',
-   defCostume:'si_c2', defPalette:'p_violet', defExpr:'e_bright', defMotifs:['mo_horse2']},
-  {id:'si3', group:'sisi', label:'エリザベート（晩年、喪の黒衣）',
-   base:'Empress Elisabeth in her later years, dressed in unrelenting black',
-   defCostume:'si_c3', defPalette:'p_black', defExpr:'e_shadow', defMotifs:['mo_mirror']},
+  {id:'yu1', group:'yu', label:'虞美人（項羽の傍らで、寵姫として）',
+   base:'Consort Yu, the beloved companion of the warlord Xiang Yu, at his side in the kingdom of Chu',
+   defCostume:'yu_c1', defPalette:'p_chu', defExpr:'e_devoted', defMotifs:['mo_poppy']},
+  {id:'yu2', group:'yu', label:'虞美人（剣の舞、営中の宴）',
+   base:'Consort Yu performing her famous sword dance at a banquet within the military camp',
+   defCostume:'yu_c2', defPalette:'p_chu', defExpr:'e_bright', defMotifs:['mo_sword']},
+  {id:'yu3', group:'yu', label:'虞美人（垓下の別れ、最期の舞）',
+   base:'Consort Yu at the siege of Gaixia, dancing one last time beside the man she loved',
+   defCostume:'yu_c3', defPalette:'p_ink', defExpr:'e_pensive', defMotifs:['mo_poppy','mo_sword']},
+  {id:'wz1', group:'wang', label:'王昭君（漢宮を発つ、輿入れの朝）',
+   base:'Wang Zhaojun on the morning she departs the Han palace, sent north as a bride for peace',
+   defCostume:'wz_c1', defPalette:'p_han', defExpr:'e_resolute', defMotifs:['mo_geese']},
+  {id:'wz2', group:'wang', label:'王昭君（琵琶を奏でる、北へ向かう道）',
+   base:'Wang Zhaojun playing the pipa on horseback, on the long road north beyond the Han frontier',
+   defCostume:'wz_c2', defPalette:'p_han', defExpr:'e_pensive', defMotifs:['mo_pipa','mo_geese']},
+  {id:'wz3', group:'wang', label:'王昭君（匈奴の地、閼氏として）',
+   base:'Wang Zhaojun in the lands of the Xiongnu, now honored as a consort of the steppe',
+   defCostume:'wz_c3', defPalette:'p_steppe', defExpr:'e_calm', defMotifs:['mo_steppe']},
+  {id:'wu1', group:'wu', label:'則天武后（皇后としての正装）',
+   base:'Wu Zetian in the formal dress of an empress consort of the Tang court',
+   defCostume:'wu_c1', defPalette:'p_tangpalace', defExpr:'e_noble', defMotifs:['mo_phoenix']},
+  {id:'wu2', group:'wu', label:'則天武后（則天大聖皇帝、即位）',
+   base:'Wu Zetian enthroned as Emperor in her own right, the only woman ever to rule China as sovereign',
+   defCostume:'wu_c2', defPalette:'p_imperial', defExpr:'e_commanding', defMotifs:['mo_zetianchar']},
+  {id:'wu3', group:'wu', label:'則天武后（政務を執る、朝堂にて）',
+   base:'Wu Zetian presiding over affairs of state in the imperial court',
+   defCostume:'wu_c3', defPalette:'p_ink', defExpr:'e_calm2', defMotifs:['mo_phoenixcrown']},
+  {id:'yg1', group:'yang', label:'楊貴妃（華清池、温泉の宮）',
+   base:'Yang Guifei at the hot spring palace of Huaqing, favored consort of Emperor Xuanzong',
+   defCostume:'yg_c1', defPalette:'p_tangpalace', defExpr:'e_smile', defMotifs:['mo_lychee']},
+  {id:'yg2', group:'yang', label:'楊貴妃（霓裳羽衣の舞）',
+   base:'Yang Guifei performing the Rainbow Skirt and Feathered Robe dance',
+   defCostume:'yg_c2', defPalette:'p_jade', defExpr:'e_bright', defMotifs:['mo_rainbowrobe']},
+  {id:'yg3', group:'yang', label:'楊貴妃（茘枝を運ばせる、寵愛の日々）',
+   base:'Yang Guifei in the days of her greatest favor, fresh lychees carried to her by galloping horses across the empire',
+   defCostume:'yg_c3', defPalette:'p_tangpalace', defExpr:'e_smile2', defMotifs:['mo_lychee']},
+  {id:'cx1', group:'cixi', label:'西太后（垂簾聴政、摂政の座）',
+   base:'Empress Dowager Cixi, ruling from behind the curtain as regent of the Qing empire',
+   defCostume:'cx_c1', defPalette:'p_qingyellow', defExpr:'e_commanding', defMotifs:['mo_dragon']},
+  {id:'cx2', group:'cixi', label:'西太后（頤和園、庭園の午後）',
+   base:'Empress Dowager Cixi on a quiet afternoon in the gardens of the Summer Palace',
+   defCostume:'cx_c2', defPalette:'p_jade', defExpr:'e_calm', defMotifs:['mo_orchid']},
+  {id:'cx3', group:'cixi', label:'西太后（写真に収まる、西洋文化への関心）',
+   base:'Empress Dowager Cixi posing for one of her celebrated photographic portraits, reflecting her fascination with the West',
+   defCostume:'cx_c3', defPalette:'p_qingyellow', defExpr:'e_noble', defMotifs:['mo_camera']},
 ];
 
 const COSTUMES = [
- {id:'ma_c1', group:'marie', label:'ローブ・ア・ラ・フランセーズ（大パニエの宮廷正装）', prompt:'a grand robe à la française with wide panniers, the full court dress of Versailles'},
- {id:'ma_c2', group:'marie', label:'ローブ・ア・ラ・ポロネーズ（トリアノン風の丈上げドレス）', prompt:'a robe à la polonaise with a draped and gathered overskirt, in the Trianon style'},
- {id:'ma_c3', group:'marie', label:'シュミーズ・ア・ラ・レーヌ（白いモスリンの牧歌ドレス）', prompt:'a chemise à la reine, a simple flowing white muslin dress'},
- {id:'ma_c4', group:'marie', label:'仮面舞踏会のドミノとマント', prompt:'a masquerade domino mask and a flowing cloak'},
- {id:'jo_c1', group:'josephine', label:'アンピール・ドレス（宮廷正装、トレーンとマント）', prompt:'an Empire-waist gown of the imperial court, with a long train and a velvet mantle'},
- {id:'jo_c2', group:'josephine', label:'戴冠式のマント（金の蜂の刺繍と貂の毛皮）', prompt:'a coronation mantle embroidered with golden bees and trimmed with ermine'},
- {id:'jo_c3', group:'josephine', label:'ディレクトワールの薄衣（透けるハイウエストのモスリン）', prompt:'a Directoire-style high-waisted gown of nearly transparent white muslin'},
- {id:'jo_c4', group:'josephine', label:'庭園用の軽いモスリンドレス', prompt:'a light muslin day dress suited for the garden'},
- {id:'mt_c1', group:'maria', label:'戴冠衣装（黒テンの毛皮とダイヤモンドの冠）', prompt:'the coronation robes of the Habsburg monarchy, trimmed with black ermine and crowned with diamonds'},
- {id:'mt_c2', group:'maria', label:'宮廷正装のロココドレス（大パニエ）', prompt:'a formal Rococo court gown with wide panniers, in the Viennese imperial style'},
- {id:'mt_c3', group:'maria', label:'晩年の喪服（黒い衣装）', prompt:'the plain black mourning dress she wore for the rest of her life'},
- {id:'mt_c4', group:'maria', label:'軍服風の乗馬服（若き女帝の威厳）', prompt:'a military-inspired riding habit, asserting her authority as a young empress'},
- {id:'ca_c1', group:'catherine', label:'戴冠式のマントと帝冠（ロマノフの威光）', prompt:'the coronation mantle and imperial crown of the Romanovs'},
- {id:'ca_c2', group:'catherine', label:'近衛連隊の軍服（クーデターの夜）', prompt:'the uniform of an imperial guards regiment, worn on the night of the coup'},
- {id:'ca_c3', group:'catherine', label:'私室の化粧着', prompt:'a loose, richly embroidered dressing gown for private hours'},
- {id:'ca_c4', group:'catherine', label:'宮廷正装のドレス（冬宮殿）', prompt:'a formal court gown of heavy brocade, worn at the Winter Palace'},
- {id:'si_c1', group:'sisi', label:'宮廷舞踏会のドレス（星の髪飾り）', prompt:'a formal ball gown of tulle, with diamond stars woven into her hair'},
- {id:'si_c2', group:'sisi', label:'乗馬服（ハンガリーの草原）', prompt:'a tailored dark riding habit for riding across the Hungarian plain'},
- {id:'si_c3', group:'sisi', label:'喪の黒衣（晩年）', prompt:'the unrelenting black mourning dress of her later years'},
- {id:'si_c4', group:'sisi', label:'ハンガリー王妃の戴冠衣装', prompt:'the Hungarian coronation gown, worn as Queen of Hungary'},
+ {id:'yu_c1', group:'yu', label:'曲裾深衣（楚地の宮廷衣装）', prompt:'a quju-style shenyi robe with a curving wraparound hem, in the court fashion of the kingdom of Chu'},
+ {id:'yu_c2', group:'yu', label:'剣舞用の広袖の衣（舞装束）', prompt:'a wide-sleeved dancing robe suited to the sword dance'},
+ {id:'yu_c3', group:'yu', label:'従軍の陣中衣（簡素な衣）', prompt:'a simpler robe suited to life within a military encampment'},
+ {id:'wz_c1', group:'wang', label:'漢代の深衣（宮廷衣装）', prompt:'a Han-dynasty shenyi court robe, layered and cross-collared'},
+ {id:'wz_c2', group:'wang', label:'胡服を纏った衣装（北方への輿入れ）', prompt:'a robe adapted with northern nomadic touches, suited to her journey to Xiongnu lands'},
+ {id:'wz_c3', group:'wang', label:'閼氏（きさき）の衣装（毛皮の縁取り）', prompt:'the robes of a Xiongnu consort, trimmed with fur'},
+ {id:'wu_c1', group:'wu', label:'皇后の礼服（翟衣、雉の刺繍）', prompt:'the empress\'s ceremonial di-yi robe, embroidered with long-tailed pheasants'},
+ {id:'wu_c2', group:'wu', label:'皇帝としての袞冕（十二章文）', prompt:'the emperor\'s ceremonial gunmian robe bearing the Twelve Ornaments, worn as self-proclaimed sovereign'},
+ {id:'wu_c3', group:'wu', label:'朝服（政務のための正装）', prompt:'formal court dress suited to presiding over affairs of state'},
+ {id:'yg_c1', group:'yang', label:'唐代の襦裙（高腰のドレス）', prompt:'a high-waisted Tang-dynasty ruqun gown'},
+ {id:'yg_c2', group:'yang', label:'霓裳羽衣の舞装束（羽根のような領巾）', prompt:'the feathered "rainbow skirt" dance costume, with long flowing scarves like wings'},
+ {id:'yg_c3', group:'yang', label:'温泉宮の薄絹の衣（華清池）', prompt:'a gauze-thin silk robe suited to the hot spring palace'},
+ {id:'cx_c1', group:'cixi', label:'満州族の旗袍（龍の刺繍）', prompt:'a Manchu qipao robe richly embroidered with dragons'},
+ {id:'cx_c2', group:'cixi', label:'垂簾聴政の正装（鳳凰冠）', prompt:'the formal regency robes, crowned with a phoenix headdress'},
+ {id:'cx_c3', group:'cixi', label:'写真撮影用の衣装（西洋文化への関心）', prompt:'an elaborate robe of the kind worn for her celebrated photographic portraits'},
 ];
 
 const PALETTES = [
- {id:'p_blue', label:'パウダーブルー', prompt:'powder blue silk', star:'marie'},
- {id:'p_rose', label:'ローズピンク', prompt:'rose pink silk', star:'marie'},
- {id:'p_ivory', label:'アイボリーと金', prompt:'ivory silk trimmed with gold', star:'both'},
- {id:'p_mint', label:'ミントグリーン', prompt:'soft mint green silk', star:'marie'},
- {id:'p_lilac', label:'ライラック', prompt:'pale lilac silk', star:'marie'},
- {id:'p_crimson', label:'深紅とゴールド', prompt:'deep crimson velvet and gold', star:'josephine'},
- {id:'p_white', label:'純白', prompt:'pure white muslin', star:'josephine'},
- {id:'p_navy', label:'ネイビーと銀', prompt:'navy silk and silver thread', star:'josephine'},
- {id:'p_habsburg', label:'ハプスブルクの黒と金', prompt:'Habsburg black and gold', star:'maria'},
- {id:'p_imperial_ru', label:'帝政ロシアの深緑と金', prompt:'imperial Russian deep green and gold', star:'catherine'},
- {id:'p_violet', label:'すみれ色', prompt:'soft violet silk', star:'sisi'},
- {id:'p_black', label:'喪の黒', prompt:'unrelenting black silk', star:'sisi'},
+ {id:'p_chu', label:'朱と黒（楚の色）', prompt:'vermillion and black, the colors of Chu', star:'yu'},
+ {id:'p_han', label:'漢代の紫紺', prompt:'Han-dynasty deep purple and indigo', star:'wang'},
+ {id:'p_steppe', label:'草原の褐色と銀', prompt:'steppe brown and silver', star:'wang'},
+ {id:'p_tangpalace', label:'大明宮の金と朱', prompt:'the gold and vermillion of the Tang palace', star:'yang'},
+ {id:'p_jade', label:'翡翠グリーン', prompt:'jade green silk', star:'both'},
+ {id:'p_imperial', label:'黄櫨染（皇帝の色）', prompt:'the amber-brown reserved for the emperor', star:'wu'},
+ {id:'p_qingyellow', label:'清朝の黄色（皇室の色）', prompt:'imperial Qing yellow silk', star:'cixi'},
+ {id:'p_ink', label:'墨色と銀', prompt:'ink black and silver', star:'wu'},
 ];
 
 const PATTERNS = [
- {id:'pt_floral', group:'marie', label:'小花柄のシルク（プティ・フルーレット）', prompt:'a silk brocade sprigged with tiny flowers'},
- {id:'pt_ribbon', group:'marie', label:'リボンと蝶結びの連続文様', prompt:'a repeating pattern of ribbons and bows'},
- {id:'pt_rocaille', group:'marie', label:'ロカイユの装飾模様', prompt:'ornate rocaille scrollwork patterns'},
- {id:'pt_chinoiserie', group:'marie', label:'シノワズリ（中国趣味の意匠）', prompt:'chinoiserie motifs in the fashionable exotic taste'},
- {id:'pt_lace', group:'both', label:'繊細なレース', prompt:'delicate lace trim throughout'},
- {id:'pt_laurel', group:'josephine', label:'月桂樹の縁飾り', prompt:'a border of laurel leaves'},
- {id:'pt_bee', group:'josephine', label:'金の蜂の紋章', prompt:'the golden bee emblem of the empire'},
- {id:'pt_greekkey', group:'josephine', label:'ギリシャ風の縁取り文様（グリークキー）', prompt:'a Greek key border pattern'},
- {id:'pt_palmette', group:'josephine', label:'金糸のパルメット刺繍', prompt:'gold-thread palmette embroidery'},
- {id:'pt_ermine', group:'both', label:'貂の毛皮の縁取り', prompt:'a trim of ermine fur'},
- {id:'pt_eagle', group:'maria', label:'ハプスブルクの双頭の鷲の紋様', prompt:'the double-headed eagle emblem of the Habsburg monarchy'},
- {id:'pt_romanov', group:'catherine', label:'ロマノフの帝冠文様', prompt:'the imperial Romanov crown motif'},
- {id:'pt_diamondstar', group:'sisi', label:'星のダイヤモンド刺繍', prompt:'diamond star embroidery, as worn in her hair'},
- {id:'pt_hungarian', group:'sisi', label:'ハンガリー風の刺繍', prompt:'Hungarian-inspired embroidery'},
+ {id:'pt_chuspiral', group:'yu', label:'楚の渦雲文様', prompt:'the swirling cloud patterns of Chu lacquerware'},
+ {id:'pt_phoenixchu', group:'yu', label:'鳳凰の意匠', prompt:'phoenix motifs, revered in the culture of Chu'},
+ {id:'pt_hancloud', group:'wang', label:'雲気文様', prompt:'Han-dynasty cloud-energy patterns'},
+ {id:'pt_nomad', group:'wang', label:'胡風の刺繍', prompt:'embroidery influenced by the nomadic peoples of the steppe'},
+ {id:'pt_12ornaments', group:'wu', label:'十二章文（皇帝の意匠）', prompt:'the Twelve Ornaments of the emperor: sun, moon, dragon, mountain, and more'},
+ {id:'pt_phoenixpeony', group:'wu', label:'鳳凰と牡丹の刺繍', prompt:'embroidery of phoenixes among peonies'},
+ {id:'pt_baoxianghua', group:'yang', label:'宝相花文様', prompt:'the baoxianghua floral medallion pattern of the Tang dynasty'},
+ {id:'pt_pearlroundel', group:'yang', label:'聯珠文（ペルシャ由来の連珠円文）', prompt:'a pearl-roundel pattern of Persian origin, carried along the Silk Road'},
+ {id:'pt_dragonphoenix', group:'cixi', label:'龍鳳の刺繍', prompt:'embroidery of dragons and phoenixes together'},
+ {id:'pt_longevity', group:'cixi', label:'万寿文様', prompt:'the shou longevity character worked repeatedly into the fabric'},
+ {id:'pt_butterfly', group:'cixi', label:'蝶と花の刺繍', prompt:'embroidery of butterflies among flowers'},
+ {id:'pt_lace', group:'both', label:'金糸の縁取り', prompt:'a fine border of gold thread'},
 ];
 
 const SCENES = [
- {id:'sc1', label:'ヴェルサイユ宮殿、鏡の間', prompt:'in the Hall of Mirrors at the Palace of Versailles'},
- {id:'sc2', label:'プティ・トリアノンの庭園', prompt:'in the gardens of the Petit Trianon'},
- {id:'sc3', label:'化粧台の前', prompt:'before an ornate dressing table in her private chamber'},
- {id:'sc4', label:'舞踏会の大広間', prompt:'in a grand ballroom mid-celebration'},
- {id:'sc5', label:'馬車の中から外を眺める', prompt:'gazing out from within a gilded carriage'},
- {id:'sc6', label:'バラ園（マルメゾン）', prompt:'in the rose garden of Malmaison'},
- {id:'sc7', label:'戴冠式の大聖堂内', prompt:'inside the cathedral during a coronation ceremony'},
- {id:'sc8', label:'書斎で書物と地球儀に囲まれて', prompt:'surrounded by books and a globe in a private study'},
- {id:'sc9', label:'バルコニーから庭を見下ろす', prompt:'looking down over the gardens from a balcony'},
- {id:'sc10', label:'羊飼い遊びの牧場（トリアノン風）', prompt:'in a rustic pastoral farm setting, playing at shepherdess'},
- {id:'sc11', label:'シェーンブルン宮殿の大広間', prompt:'in the great hall of Schönbrunn Palace'},
- {id:'sc12', label:'ホーフブルク宮殿の謁見室', prompt:'in the audience chamber of the Hofburg Palace'},
- {id:'sc13', label:'冬宮殿（エルミタージュ）の舞踏会', prompt:'at a ball in the Winter Palace of the Hermitage'},
- {id:'sc14', label:'ペテルゴフの庭園', prompt:'in the gardens of Peterhof'},
- {id:'sc15', label:'ハンガリーの草原を馬で駆ける', prompt:'riding across the open plain of Hungary'},
- {id:'sc16', label:'鏡の前で髪を結う', prompt:'before a large mirror, having her famously long hair dressed'},
+ {id:'sc1', label:'未央宮の大広間', prompt:'in the great hall of the Weiyang Palace'},
+ {id:'sc2', label:'長安城、大明宮', prompt:'within the Daming Palace at Chang\'an'},
+ {id:'sc3', label:'華清池の温泉宮', prompt:'at the hot spring palace of Huaqing'},
+ {id:'sc4', label:'垓下の陣営', prompt:'in the military encampment at Gaixia'},
+ {id:'sc5', label:'匈奴の草原', prompt:'out on the open grasslands of the Xiongnu'},
+ {id:'sc6', label:'頤和園の庭園', prompt:'in the gardens of the Summer Palace'},
+ {id:'sc7', label:'紫禁城、養心殿', prompt:'in the Hall of Mental Cultivation within the Forbidden City'},
+ {id:'sc8', label:'洛陽、則天門の前', prompt:'before the Gate of Zetian at Luoyang'},
+ {id:'sc9', label:'長江のほとり', prompt:'on the banks of the Yangtze River'},
+ {id:'sc10', label:'竹林の小道', prompt:'along a path through a bamboo grove'},
+ {id:'sc11', label:'蓮池のほとり', prompt:'beside a pond of blooming lotus'},
+ {id:'sc12', label:'満月の夜、宮廷の庭', prompt:'in a palace garden beneath a full moon'},
+ {id:'sc13', label:'輿入れの隊列、北へ続く道', prompt:'in a bridal procession on the long road north'},
+ {id:'sc14', label:'書と琴のある部屋', prompt:'in a chamber furnished with books and a guqin'},
+ {id:'sc15', label:'朝堂、玉座の間', prompt:'in the imperial throne hall'},
+ {id:'sc16', label:'写真館のような一室', prompt:'in a room set up for a formal photographic portrait'},
 ];
 
 const STYLES = [
  {id:'st1', label:'やわらかなイラスト（コラージュ風）', prompt:'a soft collage-style illustration, painted artwork, not a photograph'},
  {id:'st2', label:'華やかな商業イラスト', prompt:'a vivid commercial illustration style, digitally painted artwork with visible brushwork, not a photograph', def:true},
- {id:'st3', label:'18世紀肖像画風（油絵）', prompt:'an 18th-century oil portrait style, in the manner of a court painter such as Vigée Le Brun, painted canvas texture, not a photograph'},
- {id:'st4', label:'水彩と淡い光の絵', prompt:'a soft watercolor painting with delicate light, visible paper texture and pigment bleed, not a photograph'},
+ {id:'st3', label:'唐代仏画・宮廷絵巻風', prompt:'a Tang-dynasty court scroll painting style, mineral pigment on silk, not a photograph'},
+ {id:'st4', label:'水墨と淡い彩色', prompt:'ink wash painting with delicate light coloring, visible brush texture, not a photograph'},
  {id:'st5', label:'現代的なイラストレーション', prompt:'a contemporary digital illustration, flat painted shading, not a photograph'},
  {id:'st6', label:'写実的なポートレート', prompt:'a photorealistic portrait'},
  {id:'st7', label:'グラフィカルな広告ポスター風', prompt:'a polished commercial advertisement poster style: glossy, magazine-quality retouched photography of the face and hair preserving her likeness, while the surrounding setting is abstracted into bold flat color-block panels, torn paper collage textures, and graphic motifs rather than a literal photographic environment', fav:true},
@@ -316,8 +305,8 @@ const TONE = [
 
 const DYN = [
  {id:'dy1', label:'静かに', prompt:'a calm, still composure'},
- {id:'dy2', label:'流れる', prompt:'flowing movement in hair and fabric', def:true},
- {id:'dy3', label:'大きく動く', prompt:'sweeping movement, with fabric and powder catching in the air'},
+ {id:'dy2', label:'流れる', prompt:'flowing movement in hair, ribbons and fabric', def:true},
+ {id:'dy3', label:'大きく動く', prompt:'sweeping movement, with long scarves and hair catching in the air'},
 ];
 
 const FRAMING = [
@@ -336,22 +325,23 @@ const ANGLE = [
 ];
 
 const HANDS = [
- {id:'ha1', label:'片手で扇を持つ', prompt:'holding a folding fan in one hand', def:true},
- {id:'ha2', label:'両手を前で重ねる', prompt:'both hands folded gently in front'},
- {id:'ha3', label:'裾を軽くつまむ', prompt:'lightly gathering the hem of her skirt with one hand'},
+ {id:'ha1', label:'両手を前で重ねる', prompt:'both hands folded gently in front', def:true},
+ {id:'ha2', label:'領巾を持ち上げる', prompt:'lifting a long silk scarf with one hand'},
+ {id:'ha3', label:'裾を軽くつまむ', prompt:'lightly gathering the hem of her robe with one hand'},
  {id:'ha4', label:'指定しない', prompt:''},
 ];
 
 const EXPR = [
  {id:'e_noble', label:'気高く近寄りがたい', prompt:'a noble, aloof expression'},
  {id:'e_bright', label:'華やかで明るい', prompt:'a bright, radiant expression'},
- {id:'e_fan', label:'扇で口元を隠して', prompt:'her mouth hidden behind a fan, a hint of a smile in her eyes'},
+ {id:'e_devoted', label:'一途な眼差し', prompt:'a devoted, unwavering gaze'},
  {id:'e_calm', label:'聡明で落ち着いた', prompt:'a composed, intelligent expression'},
+ {id:'e_calm2', label:'冷静で威厳のある', prompt:'a calm, dignified, commanding presence'},
  {id:'e_smile', label:'微笑を含んで', prompt:'a faint, gentle smile'},
+ {id:'e_smile2', label:'華やかに微笑んで', prompt:'a dazzling, radiant smile'},
  {id:'e_pensive', label:'物思いに沈んで', prompt:'a pensive, thoughtful expression'},
- {id:'e_gaze', label:'こちらを見つめて', prompt:'gazing directly at the viewer'},
- {id:'e_glance', label:'ふと振り返る', prompt:'glancing back over her shoulder'},
- {id:'e_shadow', label:'翳りを帯びた', prompt:'a faint shadow of melancholy'},
+ {id:'e_resolute', label:'覚悟を秘めて', prompt:'a quiet resolve behind her eyes'},
+ {id:'e_commanding', label:'威厳に満ちて', prompt:'a majestic, commanding presence'},
  {id:'e_modest', label:'優雅で控えめ', prompt:'graceful and modest'},
 ];
 
@@ -364,7 +354,7 @@ const FACE_REF = [
 
 const MAKEUP = [
  {id:'mk1', label:'現代風の眉・自然な肌', prompt:'natural modern brows and skin', def:true},
- {id:'mk2', label:'18世紀風の白粉メイク（頬紅と付けほくろ）', prompt:'18th-century white lead makeup with rouged cheeks and a beauty mark'},
+ {id:'mk2', label:'唐代風の花鈿メイク（額の飾り、紅唇）', prompt:'Tang-dynasty huadian makeup with a painted forehead ornament and richly reddened lips'},
 ];
 
 const FEATURES = [
@@ -376,60 +366,48 @@ const FEATURES = [
 ];
 
 const MOTIFS = [
- {id:'mo_rose', group:'both', label:'バラ', prompt:'a trailing rose blossom'},
- {id:'mo_pearl', group:'marie', label:'真珠の首飾り', prompt:'a long strand of pearls'},
- {id:'mo_sheep', group:'marie', label:'羊（パストラルな遊び）', prompt:'a small lamb, part of a pastoral game'},
- {id:'mo_fan', group:'marie', label:'扇', prompt:'a painted folding fan'},
- {id:'mo_ribbon', group:'marie', label:'リボン', prompt:'trailing silk ribbons'},
- {id:'mo_bird', group:'marie', label:'小鳥', prompt:'a small songbird'},
- {id:'mo_cards', group:'marie', label:'トランプ', prompt:'a scattered hand of playing cards'},
- {id:'mo_cake', group:'marie', label:'小さなケーキ', prompt:'a small iced cake'},
- {id:'mo_swan', group:'josephine', label:'白鳥', prompt:'a swan gliding on still water'},
- {id:'mo_bee', group:'josephine', label:'金の蜂', prompt:'the golden bee, emblem of the empire'},
- {id:'mo_laurel', group:'josephine', label:'月桂樹の冠', prompt:'a wreath of laurel leaves'},
- {id:'mo_pearl2', group:'josephine', label:'真珠', prompt:'a delicate strand of pearls'},
- {id:'mo_peacock', group:'josephine', label:'クジャクの羽根', prompt:'a peacock feather'},
- {id:'mo_eagle', group:'maria', label:'双頭の鷲', prompt:'the double-headed eagle of the Habsburgs'},
- {id:'mo_crown_mt', group:'maria', label:'ハプスブルクの王冠', prompt:'the crown of the Habsburg monarchy'},
- {id:'mo_children', group:'maria', label:'大勢の子どもたち', prompt:'a great many children gathered around her'},
- {id:'mo_blackfan', group:'maria', label:'黒い扇（喪の年月）', prompt:'a black mourning fan'},
- {id:'mo_crownRu', group:'catherine', label:'帝冠（ロマノフ）', prompt:'the imperial crown of Russia'},
- {id:'mo_fireworks', group:'catherine', label:'花火（宮廷の祝宴）', prompt:'fireworks bursting over the palace in celebration'},
- {id:'mo_horse', group:'catherine', label:'白馬（クーデターの夜）', prompt:'a white horse, as ridden on the night of the coup'},
- {id:'mo_book', group:'catherine', label:'書物（啓蒙思想）', prompt:'a book, reflecting her devotion to Enlightenment ideas'},
- {id:'mo_star', group:'sisi', label:'星のダイヤモンド（髪飾り）', prompt:'diamond stars woven into her hair'},
- {id:'mo_horse2', group:'sisi', label:'馬（ハンガリーの草原）', prompt:'a horse on the Hungarian plain'},
- {id:'mo_mirror', group:'sisi', label:'鏡（美への執着）', prompt:'a hand mirror, reflecting her devotion to her own appearance'},
- {id:'mo_edelweiss', group:'sisi', label:'エーデルワイス（アルプスの花）', prompt:'a sprig of edelweiss'},
+ {id:'mo_poppy', group:'yu', label:'虞美人草（ひなげし）', prompt:'the corn poppy flower that came to bear her name'},
+ {id:'mo_sword', group:'yu', label:'剣', prompt:'a slender sword'},
+ {id:'mo_pipa', group:'wang', label:'琵琶', prompt:'a pipa lute'},
+ {id:'mo_geese', group:'wang', label:'落雁（雁）', prompt:'wild geese, said to fall from the sky in awe of her beauty'},
+ {id:'mo_steppe', group:'wang', label:'草原の風', prompt:'the wind of the open steppe'},
+ {id:'mo_phoenix', group:'wu', label:'鳳凰', prompt:'a phoenix, her personal emblem as a female ruler'},
+ {id:'mo_zetianchar', group:'wu', label:'則天文字（曌）', prompt:'the character she invented for her own name, "zhao", meaning sun and moon in the sky'},
+ {id:'mo_phoenixcrown', group:'wu', label:'鳳冠', prompt:'a phoenix crown'},
+ {id:'mo_lychee', group:'yang', label:'茘枝', prompt:'a cluster of fresh lychees'},
+ {id:'mo_rainbowrobe', group:'yang', label:'霓裳羽衣', prompt:'the rainbow-hued feathered robe of her famous dance'},
+ {id:'mo_dragon', group:'cixi', label:'龍', prompt:'an imperial dragon'},
+ {id:'mo_orchid', group:'cixi', label:'蘭の花', prompt:'orchid blossoms, her favorite flower'},
+ {id:'mo_camera', group:'cixi', label:'カメラ', prompt:'an antique box camera'},
 ];
 
 const PROPS = [
- {id:'pr1', label:'化粧道具（白粉・香水瓶・鏡）', prompt:'a dressing table set with powder, a perfume bottle, and a hand mirror'},
- {id:'pr2', label:'扇と手袋', prompt:'a folding fan and a pair of long gloves'},
- {id:'pr3', label:'トランプと酒杯', prompt:'a scattered hand of cards and a glass of wine'},
- {id:'pr4', label:'庭仕事の道具（じょうろ・熊手・麦わら帽子）', prompt:'a watering can, a small rake, and a straw hat'},
- {id:'pr5', label:'楽器（ハープとクラヴサン）', prompt:'a harp and a harpsichord in the background'},
- {id:'pr6', label:'書物と地球儀', prompt:'books and a globe nearby'},
- {id:'pr7', label:'愛犬（パピヨン犬）', prompt:'a small papillon dog at her feet'},
- {id:'pr8', label:'白鳥と睡蓮の池', prompt:'a pond with swans and water lilies nearby'},
+ {id:'pr1', label:'琴と楽譜', prompt:'a guqin and sheets of music'},
+ {id:'pr2', label:'絹の領巾', prompt:'long silk scarves draped and flowing'},
+ {id:'pr3', label:'筆と巻物', prompt:'a calligraphy brush and unrolled scrolls'},
+ {id:'pr4', label:'玉器と宝飾箱', prompt:'carved jade ornaments and an open jewelry box'},
+ {id:'pr5', label:'茘枝の籠', prompt:'a basket piled with fresh lychees'},
+ {id:'pr6', label:'孔雀の羽根扇', prompt:'a fan of peacock feathers'},
+ {id:'pr7', label:'香炉と香煙', prompt:'a bronze incense burner with fine threads of smoke'},
+ {id:'pr8', label:'蓮の花と池', prompt:'blooming lotus flowers on a still pond'},
 ];
 
 const BOLD = [
  {id:'bd0', label:'なし', prompt:''},
  {id:'bd1', label:'大胆なトリミング', prompt:'a bold, tightly cropped composition'},
- {id:'bd2', label:'鏡の間の反射構図', prompt:'a composition built around reflections in a hall of mirrors'},
- {id:'bd3', label:'後ろ姿と巻き髪', prompt:'a composition from behind, showing curled hair and the back of the gown'},
- {id:'bd4', label:'薔薇の庭に埋もれる構図', prompt:'a composition where she is nearly overtaken by a garden of roses'},
- {id:'bd5', label:'豪華な裾で画面を埋める', prompt:'a composition where the opulent hem of her gown fills the frame'},
+ {id:'bd2', label:'水墨のにじみを生かした構図', prompt:'a composition built around the bleeding edges of ink wash'},
+ {id:'bd3', label:'後ろ姿と長い黒髪', prompt:'a composition from behind, showing long black hair and the back of the robe'},
+ {id:'bd4', label:'蓮の花に埋もれる構図', prompt:'a composition where she is nearly overtaken by blooming lotus flowers'},
+ {id:'bd5', label:'豪華な裾で画面を埋める', prompt:'a composition where the opulent hem of her robe fills the frame'},
  {id:'bd6', label:'対角線に走らせる', prompt:'a dynamic diagonal composition'},
 ];
 
 const DECOR = [
- {id:'dc1', label:'金のロカイユ装飾フレーム', prompt:'a gilded rocaille ornamental frame around the scene'},
- {id:'dc2', label:'リボンと薔薇の縁取り', prompt:'a border of ribbons and roses'},
- {id:'dc3', label:'レースの縁飾り', prompt:'a delicate lace trim along the edges'},
- {id:'dc4', label:'月桂樹のリース', prompt:'a wreath of laurel worked into the border'},
- {id:'dc5', label:'蜂の紋章の散らし', prompt:'small golden bee emblems scattered across the surface'},
+ {id:'dc1', label:'雲文様の縁取り', prompt:'a border of stylized cloud patterns'},
+ {id:'dc2', label:'蓮と金魚の縁取り', prompt:'a border of lotus blossoms and goldfish'},
+ {id:'dc3', label:'金糸の縁飾り', prompt:'a delicate trim of gold thread along the edges'},
+ {id:'dc4', label:'龍鳳のリース', prompt:'a wreath of dragons and phoenixes worked into the border'},
+ {id:'dc5', label:'牡丹の散らし', prompt:'peony blossoms scattered across the surface'},
  {id:'dc6', label:'金箔の飛沫', prompt:'flecks of gold leaf scattered across the image'},
  {id:'dc7', label:'スパークルの光跡', prompt:'bursts of sparkling light and gold flare streaks across the image'},
  {id:'dc8', label:'色面ブロックの背景', prompt:'the background broken into bold flat color-block panels'},
@@ -440,16 +418,16 @@ const LIGHT = [
  {id:'lt0', label:'なし', prompt:''},
  {id:'lt1', label:'柔らかな光', prompt:'soft diffused light'},
  {id:'lt2', label:'逆光', prompt:'backlit, with light coming from behind her'},
- {id:'lt3', label:'シャンデリアの明暗', prompt:'warm chiaroscuro from candlelit chandeliers'},
+ {id:'lt3', label:'灯籠の明暗', prompt:'warm chiaroscuro from a paper lantern'},
  {id:'lt4', label:'絹目の質感', prompt:'the fine woven texture of silk visible throughout'},
  {id:'lt5', label:'金の照り', prompt:'a warm reflected glow from gold leaf and gilding'},
 ];
 
 const TEXTSTYLE = [
- {id:'tx1', label:'手書き風スクリプト体', prompt:'rendered in an elegant handwritten script'},
+ {id:'tx1', label:'手書き風の書', prompt:'rendered in elegant brush calligraphy'},
  {id:'tx2', label:'ゴールドの箔押し風', prompt:'rendered as if gold-foil stamped'},
- {id:'tx3', label:'クラシックなセリフ体', prompt:'set in a classic serif typeface'},
- {id:'tx4', label:'紋章風のエンブレム文字', prompt:'styled like heraldic emblem lettering'},
+ {id:'tx3', label:'クラシックな明朝体', prompt:'set in a classic Mincho-style typeface'},
+ {id:'tx4', label:'印章風の文字', prompt:'styled like a carved seal-script inscription'},
  {id:'tx5', label:'ポスター見出し風（大胆な色面と重なる）', prompt:'set as a bold magazine-poster headline, layered over a flat color-block panel'},
 ];
 
@@ -596,12 +574,12 @@ function renderSections(){
   textCard.innerHTML = `<h2>入れる文字</h2><p class="desc">短い文言をタイポグラフィとして画面に置きます。任意です。</p>`;
   const field1 = document.createElement('div'); field1.className='field';
   field1.innerHTML = `<label>キャッチコピー（任意）</label>`;
-  const inp1 = document.createElement('input'); inp1.type='text'; inp1.value=state.catchphrase||''; inp1.placeholder='例：王妃の午後';
+  const inp1 = document.createElement('input'); inp1.type='text'; inp1.value=state.catchphrase||''; inp1.placeholder='例：傾国の美女';
   inp1.oninput=(e)=>{state.catchphrase=e.target.value; updatePrompt();};
   field1.appendChild(inp1);
   const field2 = document.createElement('div'); field2.className='field';
   field2.innerHTML = `<label>添える一文（任意）</label>`;
-  const inp2 = document.createElement('input'); inp2.type='text'; inp2.value=state.subtext||''; inp2.placeholder='例：Let them eat cake';
+  const inp2 = document.createElement('input'); inp2.type='text'; inp2.value=state.subtext||''; inp2.placeholder='例：一顧傾人城';
   inp2.oninput=(e)=>{state.subtext=e.target.value; updatePrompt();};
   field2.appendChild(inp2);
   textCard.appendChild(field1);
