@@ -6,18 +6,18 @@
 <title>似合わせファッションプロンプトビルダー</title>
 <style>
   :root {
-    --bg: #fdf6ef;
-    --surface: #fffdfb;
-    --surface-alt: #fae6d2;
-    --border: #eecda3;
-    --text: #3a2a1a;
-    --text-muted: #8c7256;
-    --accent: #d9762f;
-    --accent-strong: #a2531c;
-    --accent-soft: #fae3c8;
-    --accent-soft-ink: #8a4c1a;
-    --chip-bg: #fffbf6;
-    --shadow: 0 1px 2px rgba(160, 90, 30, 0.07), 0 10px 26px rgba(160, 90, 30, 0.07);
+    --bg: #fffef5;
+    --surface: #ffffff;
+    --surface-alt: #fdf3c0;
+    --border: #f0da6a;
+    --text: #332b00;
+    --text-muted: #8f7f2c;
+    --accent: #f7c600;
+    --accent-strong: #a67c00;
+    --accent-soft: #fff3ad;
+    --accent-soft-ink: #6b5000;
+    --chip-bg: #fffef0;
+    --shadow: 0 1px 2px rgba(200, 150, 0, 0.08), 0 10px 26px rgba(200, 150, 0, 0.08);
     --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     --serif-jp: "Hiragino Mincho ProN", "YuMincho", "Yu Mincho", "Noto Serif JP", serif;
     --sans-jp: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
@@ -25,24 +25,24 @@
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #201409;
-      --surface: #2a1c0e;
-      --surface-alt: #38270f;
-      --border: #55391c;
-      --text: #f7ecdf;
-      --text-muted: #d3b48d;
-      --accent: #f0a056;
-      --accent-strong: #f8cb98;
-      --accent-soft: #4a2f13;
-      --accent-soft-ink: #f8cb98;
-      --chip-bg: #362313;
+      --bg: #1a1600;
+      --surface: #241f00;
+      --surface-alt: #332b00;
+      --border: #5c4d00;
+      --text: #fbf6d8;
+      --text-muted: #ddd08a;
+      --accent: #ffd60a;
+      --accent-strong: #ffe873;
+      --accent-soft: #4a3f00;
+      --accent-soft-ink: #ffe873;
+      --chip-bg: #2c2600;
       --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 14px 30px rgba(0,0,0,0.4);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #201409; --surface: #2a1c0e; --surface-alt: #38270f; --border: #55391c;
-    --text: #f7ecdf; --text-muted: #d3b48d; --accent: #f0a056; --accent-strong: #f8cb98;
-    --accent-soft: #4a2f13; --accent-soft-ink: #f8cb98; --chip-bg: #362313;
+    --bg: #1a1600; --surface: #241f00; --surface-alt: #332b00; --border: #5c4d00;
+    --text: #fbf6d8; --text-muted: #ddd08a; --accent: #ffd60a; --accent-strong: #ffe873;
+    --accent-soft: #4a3f00; --accent-soft-ink: #ffe873; --chip-bg: #2c2600;
     --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 14px 30px rgba(0,0,0,0.4);
   }
 
@@ -135,7 +135,7 @@
   textarea.output-box { width: 100%; min-height: 120px; max-height: 26vh; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: var(--text); font-family: var(--mono); font-size: 12px; line-height: 1.6; resize: vertical; margin-bottom: 6px; }
   .output-actions { display: flex; gap: 8px; margin: 8px 0 16px; }
   .btn { font-family: var(--sans-jp); font-size: 13px; font-weight: 600; padding: 9px 12px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; flex: 1; }
-  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary { background: var(--accent); color: var(--accent-soft-ink); border-color: var(--accent); font-weight: 700; }
   .btn-primary:hover { filter: brightness(1.06); }
   .btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
