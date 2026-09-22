@@ -676,7 +676,8 @@ function buildPromptFor(h, overrides){
   const sizePrompt = findPrompt(SIZES, s.size);
   if(sizePrompt) parts.push(sizePrompt);
   if(s.rawExtra) parts.push(s.rawExtra);
-  return parts.filter(Boolean).join(', ') + '.';
+  const headroom = "TOP PRIORITY: Do not frame the subject as a tight, face-filling close-up. Compose the shot slightly zoomed out so the head (including the hairline, loose strands, and any flyaway hair) occupies no more than about 40% of the total frame height. The top of the head or hair must never touch, extend beyond, or be cropped by the top edge of the frame. If the costume, background, or other described elements cannot all fit within the frame, crop into the lower body rather than the head.";
+  return headroom + ' ' + parts.filter(Boolean).join(', ') + '.';
 }
 
 function updatePrompt(){
