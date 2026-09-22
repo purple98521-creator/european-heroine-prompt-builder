@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>似合わせ診断×画像生成プロンプトメーカー</title>
+<style>
+  :root {
+    --bg: #fdf6ef;
+    --surface: #fffdfb;
+    --surface-alt: #fae6d2;
+    --border: #eecda3;
+    --text: #3a2a1a;
+    --text-muted: #8c7256;
+    --accent: #d9762f;
+    --accent-strong: #a2531c;
+    --accent-soft: #fae3c8;
+    --accent-soft-ink: #8a4c1a;
+    --chip-bg: #fffbf6;
+    --shadow: 0 1px 2px rgba(160, 90, 30, 0.07), 0 10px 26px rgba(160, 90, 30, 0.07);
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --serif-jp: "Hiragino Mincho ProN", "YuMincho", "Yu Mincho", "Noto Serif JP", serif;
+    --sans-jp: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #201409;
+      --surface: #2a1c0e;
+      --surface-alt: #38270f;
+      --border: #55391c;
+      --text: #f7ecdf;
+      --text-muted: #d3b48d;
+      --accent: #f0a056;
+      --accent-strong: #f8cb98;
+      --accent-soft: #4a2f13;
+      --accent-soft-ink: #f8cb98;
+      --chip-bg: #362313;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 14px 30px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #201409; --surface: #2a1c0e; --surface-alt: #38270f; --border: #55391c;
+    --text: #f7ecdf; --text-muted: #d3b48d; --accent: #f0a056; --accent-strong: #f8cb98;
+    --accent-soft: #4a2f13; --accent-soft-ink: #f8cb98; --chip-bg: #362313;
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 14px 30px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans-jp); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; }
+  header.hero { margin-bottom: 20px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-family: var(--serif-jp); font-weight: 600; font-size: clamp(26px, 4vw, 38px); margin: 6px 0 10px; text-wrap: balance; color: var(--accent-strong); }
+  .hero p { color: var(--text-muted); max-width: 68ch; margin: 0; font-size: 14.5px; }
+
+  .divider { display: flex; align-items: center; gap: 10px; margin: 22px 0 28px; color: var(--accent); }
+  .divider .line { flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
+  .divider .line.rev { background: linear-gradient(to left, var(--border), transparent); }
+  .divider svg { flex-shrink: 0; }
+
+  .layout { display: block; }
+
+  section.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  section.card.diag { border: 1.5px solid var(--accent); background: linear-gradient(155deg, var(--surface) 60%, var(--accent-soft) 220%); }
+
+  .cat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+  .cat-title { font-family: var(--serif-jp); font-size: 19px; font-weight: 600; display: flex; align-items: baseline; gap: 8px; }
+  .cat-title .num { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .05em; }
+  .cat-sub { color: var(--text-muted); font-size: 12.5px; margin: 2px 0 14px; }
+
+  .group-label { font-family: var(--serif-jp); font-size: 13.5px; font-weight: 600; color: var(--accent); margin: 18px 0 8px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .group-label:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+  .group-label .hint { font-family: var(--sans-jp); font-weight: 400; font-size: 11.5px; color: var(--text-muted); }
+
+  .mini-btn { font-family: var(--sans-jp); font-size: 12px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 4px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+  .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mini-btn:focus-visible, .chip:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .chip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 9px; }
+  .chip-grid.wide { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .chip-grid.narrow { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+  .chip { text-align: left; background: var(--chip-bg); border: 1px solid var(--border); border-radius: 11px; padding: 9px 11px; cursor: pointer; transition: border-color .12s ease, background .12s ease, transform .06s ease, opacity .12s ease; }
+  .chip:hover { border-color: var(--accent); }
+  .chip:active { transform: scale(.99); }
+  .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+  .chip .ja { display: block; font-weight: 600; font-size: 13.5px; }
+  .chip[aria-pressed="true"] .ja { color: var(--accent-soft-ink); }
+  .chip .en { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .hidden-by-filter { display: none !important; }
+
+  .chip.diag-chip { padding: 12px 14px; text-align: center; }
+  .chip.diag-chip .ja { font-size: 14px; }
+  .chip.diag-chip .en { font-size: 10px; margin-top: 4px; }
+  .chip.exclude { border-style: dashed; }
+  .chip.exclude .ja { color: var(--text-muted); font-weight: 500; font-style: italic; }
+  .chip.exclude[aria-pressed="true"] .ja { color: var(--accent-soft-ink); font-style: normal; }
+  .chip.fav { border-width: 2px; border-color: var(--accent); }
+  .chip.fav[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent) inset; }
+
+  .mini-random { border: none; background: none; color: var(--text-muted); font-size: 11.5px; cursor: pointer; text-decoration: underline; white-space: nowrap; padding: 0; }
+  .mini-random:hover { color: var(--accent-strong); }
+  .label-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .toggle-row .label { font-size: 13px; font-weight: 600; }
+  .toggle-row .sub { color: var(--text-muted); font-size: 11.5px; margin-top: 2px; }
+  .toggle-row.card-header { margin-top: 0; padding-top: 0; border-top: none; }
+  .toggle-row.card-header .label { font-family: var(--serif-jp); font-size: 17px; }
+  .toggle-row.card-header .sub { font-size: 12.5px; margin-top: 4px; line-height: 1.6; max-width: 62ch; }
+  .switch { position: relative; width: 44px; height: 25px; flex-shrink: 0; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+  .switch .knob { position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%; background: var(--text-muted); transition: left .15s ease, background .15s ease; }
+  .switch[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .switch[aria-checked="true"] .knob { left: 21px; background: var(--accent); }
+
+  .toggle-body { margin-top: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .toggle-body[hidden] { display: none; }
+  .mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .chip.mood { padding: 8px 10px; }
+  .chip.mood .ja { font-size: 13px; }
+
+  .field-label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .field-hint { color: var(--text-muted); font-size: 12.5px; margin: -2px 0 8px; }
+  textarea.text-input, input.text-input { width: 100%; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: var(--sans-jp); font-size: 14px; resize: vertical; }
+
+  .filter-note { font-size: 11.5px; color: var(--accent-strong); margin: -4px 0 10px; }
+
+  .output-card { position: static; margin-top: 28px; background: var(--surface); border: 2px solid var(--accent); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+  .output-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 780px) { .output-grid { grid-template-columns: 1fr; } }
+  .output-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .output-head h2 { font-family: var(--serif-jp); font-size: 15px; margin: 0; }
+  .char-count { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+  textarea.output-box { width: 100%; min-height: 120px; max-height: 26vh; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: var(--text); font-family: var(--mono); font-size: 12px; line-height: 1.6; resize: vertical; margin-bottom: 6px; }
+  .output-actions { display: flex; gap: 8px; margin: 8px 0 16px; }
+  .btn { font-family: var(--sans-jp); font-size: 13px; font-weight: 600; padding: 9px 12px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; flex: 1; }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .global-actions { display: flex; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .copy-toast { font-size: 12px; color: var(--accent); height: 16px; margin-top: 4px; text-align: center; visibility: hidden; }
+  .copy-toast.show { visibility: visible; }
+  .base-type-summary { font-size: 12px; color: var(--text-muted); background: var(--surface-alt); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; min-height: 20px; }
+  .base-type-summary b { color: var(--accent-strong); }
+
+  footer.note { margin-top: 32px; color: var(--text-muted); font-size: 12.5px; text-align: center; }
+  .nav-links { font-size: 12.5px; color: var(--text-muted); margin-top: 10px; }
+  .nav-links a { color: var(--accent-strong); text-decoration: none; margin-right: 10px; }
+  .nav-links a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">DIAGNOSIS-BASED IMAGE PROMPT BUILDER</div>
+    <h1>似合わせ診断×画像生成プロンプトメーカー</h1>
+    <p>顔タイプ・パーソナルカラー・骨格の「カテゴリー」を選ぶと、以降の髪型・服・小物・色のおすすめが絞り込まれます（診断そのものは行いません／自己申告で選ぶだけです）。選んだ組み合わせから、画像生成AI用のプロンプトを日本語と英語の両方で組み立てます。</p>
+  </header>
+
+  <div class="divider">
+    <span class="line"></span>
+    <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 L14 7 L7 14 L0 7 Z" fill="currentColor" opacity="0.7"/></svg>
+    <span class="line rev"></span>
+  </div>
+
+  <div class="layout">
+    <div class="controls" id="controls">
+      <section class="card" id="portraitCard">
+        <div class="cat-title" style="margin-bottom:4px;">人物ポートレートのアレンジ</div>
+        <p class="cat-sub">アップロードする人物写真を、ファッショナブルなイラストとして作品の世界観に合わせて再構成する指示を追加します。※本ツールは画像を解析しません。実際の写真は画像生成AI側にアップロードしてください。ここでは「その写真を基にこう仕上げてほしい」という指示文だけを作ります。</p>
+
+        <div class="group-label">
+          <span>参照画像の効かせ方</span>
+          <span class="label-right"><button type="button" class="mini-random" id="faceRefRandom">この項目だけランダム</button></span>
+        </div>
+        <p class="field-hint" style="margin:-2px 0 10px;">顔写真をアップロードして似せる場合の強さです。</p>
+        <div class="chip-grid narrow" id="faceRefGrid"></div>
+
+        <div class="group-label">
+          <span>顔立ち（参照写真からの逸脱度・複数選択可）</span>
+          <span class="label-right"><button type="button" class="mini-random" id="featuresRandom">この項目だけランダム</button></span>
+        </div>
+        <p class="field-hint" style="margin:-2px 0 10px;">複数選べます。増やすほど参照画像の顔から離れます。似合わせの「顔立ちの印象・雰囲気」とは別物です。</p>
+        <div class="chip-grid narrow" id="featuresGrid"></div>
+
+        <div class="group-label">アレンジの方向性（複数選択可）</div>
+        <div class="mood-grid" id="moodGrid"></div>
+
+        <div style="margin-top:16px;">
+          <label class="field-label" for="portraitFeatures">人物の特徴・こだわり（任意）</label>
+          <p class="field-hint">例：ショートヘア、赤いスカーフ、優しい笑顔 など</p>
+          <textarea class="text-input" id="portraitFeatures" rows="2" placeholder="髪型・服装・雰囲気などを自由に記入"></textarea>
+        </div>
+      </section>
+
+      <section class="card" id="snsCard">
+        <div class="toggle-row card-header">
+          <div>
+            <div class="label">SNSプロフィール画像の参照</div>
+            <p class="sub">モデル画像に加えて、SNSプロフィール欄のスクリーンショットも2枚目の参照画像として渡し、そこに書かれたブランド名・肩書き・キャッチコピーなどのテキスト情報を作品に反映する指示を追加します</p>
+          </div>
+          <div class="switch" id="snsSwitch" role="switch" aria-checked="false" tabindex="0"><div class="knob"></div></div>
+        </div>
+        <div class="toggle-body" id="snsBody" hidden>
+          <p class="field-hint" style="margin-top:0;">※本ツールは画像を解析しません。プロフィールのスクショは画像生成AI側に2枚目の参照画像としてアップロードしてください。</p>
+          <div>
+            <label class="field-label" for="snsText">反映してほしいテキスト情報（任意）</label>
+            <p class="field-hint">例：ブランド名「〇〇」、肩書き「フラワーアーティスト」など。生成AIが画像内の文字を正しく読み取れないことがあるため、直接入力しておくと確実です</p>
+            <textarea class="text-input" id="snsText" rows="2" placeholder="ブランド名・肩書き・プロフィール文などを自由に入力"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP0 diagnosis card is hand-authored; other sections injected by JS -->
+      <section class="card diag" id="diagCard">
+        <div class="cat-title" style="margin-bottom:4px;"><span class="num">STEP&nbsp;0</span>似合わせタイプを選ぶ</div>
+        <p class="cat-sub">診断は行いません。近いと思うカテゴリーを選ぶだけでOKです。選ぶと、下の髪型・服・小物・色のおすすめが絞り込まれます（いつでも解除できます）。</p>
+
+        <div class="group-label">顔タイプ<span class="hint">1つ選択・任意</span></div>
+        <div class="chip-grid narrow" id="faceTypeGrid"></div>
+
+        <div class="group-label">パーソナルカラー<span class="hint">1つ選択・任意</span></div>
+        <div class="chip-grid narrow" id="seasonTypeGrid"></div>
+
+        <div class="group-label">骨格<span class="hint">1つ選択・任意</span></div>
+        <div class="chip-grid narrow" id="bodyTypeGrid"></div>
+
+        <div class="toggle-row">
+          <div>
+            <div class="label">選んだタイプに合わせておすすめだけ表示する</div>
+            <div class="sub">オフにすると、すべての選択肢を表示します</div>
+          </div>
+          <div class="switch" id="filterSwitch" role="switch" aria-checked="true" tabindex="0"><div class="knob"></div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" id="textCard">
+      <div class="cat-title" style="margin-bottom:4px;">入れる文字</div>
+      <p class="cat-sub">短い文言をタイポグラフィとして画面に置きます。任意です。</p>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <label class="field-label" for="catchCopy">キャッチコピー（任意）</label>
+          <p class="field-hint">例：凛として、咲く。</p>
+          <input class="text-input" id="catchCopy" placeholder="短い言葉を入力">
+        </div>
+        <div>
+          <label class="field-label" for="subText">添える一文（任意）</label>
+          <p class="field-hint">例：静けさの中に、強さを纏う。</p>
+          <textarea class="text-input" id="subText" rows="2" placeholder="補足の文章を自由に入力"></textarea>
+        </div>
+        <div>
+          <div class="group-label" style="margin:0;">
+            <span>文字のスタイル（任意・1つ選択）</span>
+            <span class="label-right"><button type="button" class="mini-random" id="textStyleRandom">この項目だけランダム</button></span>
+          </div>
+          <div class="chip-grid narrow" id="textStyleGrid" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="output-card" id="outputCard">
+      <div class="cat-title" style="margin-bottom:8px;">生成されたプロンプト</div>
+      <div class="base-type-summary" id="baseTypeSummary">タイプ未選択</div>
+      <div class="output-grid">
+        <div>
+          <div class="output-head"><h2>日本語</h2><span class="char-count" id="charCountJa">0 chars</span></div>
+          <textarea class="output-box" id="outputJa" readonly placeholder="カテゴリを選択すると、ここにプロンプトが表示されます"></textarea>
+          <div class="output-actions"><button class="btn btn-primary" id="copyJaBtn">日本語をコピー</button></div>
+        </div>
+        <div>
+          <div class="output-head"><h2>英語</h2><span class="char-count" id="charCountEn">0 chars</span></div>
+          <textarea class="output-box" id="outputEn" readonly placeholder="Prompt will appear here"></textarea>
+          <div class="output-actions"><button class="btn btn-primary" id="copyEnBtn">英語をコピー</button></div>
+        </div>
+      </div>
+
+      <div class="copy-toast" id="copyToast">コピーしました</div>
+      <div class="global-actions">
+        <button class="btn btn-ghost" id="randomBtn">🎲 ランダムでおまかせ</button>
+        <button class="btn btn-ghost" id="resetBtn">リセット</button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="note">
+    生成されるプロンプトは日本語・英語の両方です。お使いの画像生成AI（Midjourney / Stable Diffusion / Nano Banana など）に英語版をそのまま貼り付けてお使いください。<br>
+    顔タイプ診断は一般社団法人日本顔タイプ診断協会の「顔タイプ診断®」、パーソナルカラー診断・骨格診断は一般に広く使われている分類名称を、似合わせの参考カテゴリーとして使用しています（本ツールは診断機能を提供するものではありません）。
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     STEP0: diagnosis category definitions
+  ========================================================= */
+  const FACE_TYPES = [
+    { code: "FR", ja: "フレッシュタイプ", desc: "親しみやすく、爽やかな今どきの印象", en: "a fresh-type facial impression, youthful and approachable with a blend of childlike and adult charm" },
+    { code: "CU", ja: "キュートタイプ", desc: "丸みがあり、あどけなく可愛らしい印象", en: "a cute-type facial impression, round youthful features with big sparkling eyes" },
+    { code: "AC", ja: "アクティブキュートタイプ", desc: "元気で親しみやすい、少年っぽさもある印象", en: "an active-cute-type facial impression, energetic and sporty with a playful cuteness" },
+    { code: "FE", ja: "フェミニンタイプ", desc: "柔らかく丸みのある、女性らしい印象", en: "a feminine-type facial impression, soft curved features with gentle romantic charm" },
+    { code: "SE", ja: "ソフトエレガントタイプ", desc: "上品さと柔らかさをあわせ持つ大人な印象", en: "a soft-elegant-type facial impression, refined yet gentle, blending adult grace with warmth" },
+    { code: "EL", ja: "エレガントタイプ", desc: "シャープで洗練された、華やかな大人の印象", en: "an elegant-type facial impression, sharp sophisticated adult features with graceful poise" },
+    { code: "CO", ja: "クールタイプ", desc: "シャープでミステリアス、都会的な印象", en: "a cool-type facial impression, sharp striking adult features with a composed cool air" },
+    { code: "CC", ja: "クールカジュアルタイプ", desc: "シャープさとラフさが同居する、こなれた印象", en: "a cool-casual-type facial impression, sharp yet relaxed with an effortless cool attitude" }
+  ];
+  const SEASON_TYPES = [
+    { code: "SP", ja: "スプリング（イエベ春）", en: "a warm, clear spring personal-color palette — coral, warm yellow, bright green and ivory tones" },
+    { code: "SU", ja: "サマー（ブルベ夏）", en: "a cool, soft summer personal-color palette — lavender, rose pink, soft blue and pearl gray tones" },
+    { code: "AU", ja: "オータム（イエベ秋）", en: "a warm, deep autumn personal-color palette — terracotta, mustard, olive and chocolate brown tones" },
+    { code: "WI", ja: "ウィンター（ブルベ冬）", en: "a cool, clear winter personal-color palette — true red, black, pure white and jewel-tone blue" }
+  ];
+  const BODY_TYPES = [
+    { code: "ST", ja: "ストレート", desc: "筋肉にハリがあり立体的。シンプルで上質な服が似合うタイプ", en: "a straight-type body silhouette styling — well-tailored, structured clothing that follows the body's natural lines, in simple high-quality fabrics" },
+    { code: "WA", ja: "ウェーブ", desc: "華奢で曲線的。柔らかい素材や装飾のある服が似合うタイプ", en: "a wave-type body silhouette styling — soft, flowing clothing with delicate details, thin fabrics, and a high-waisted silhouette" },
+    { code: "NA", ja: "ナチュラル", desc: "骨格がしっかりして関節が目立つ。ラフで肩の力が抜けた服が似合うタイプ", en: "a natural-type body silhouette styling — relaxed, loose-fitting clothing in natural textures like linen, with larger casual accessories" }
+  ];
+
+  const diag = { face: null, season: null, body: null };
+  let filterOn = true;
+
+  /* =========================================================
+     Portrait arrangement (photo-reference instruction generator)
+  ========================================================= */
+  const MOODS = [
+    { ja: "スタイリッシュ", jaPhrase: "スタイリッシュで洗練されたシルエット", en: "a stylish, refined silhouette" },
+    { ja: "ファッショナブル", jaPhrase: "ファッショナブルでエディトリアルなハイファッション感", en: "fashionable, editorial haute-couture styling" },
+    { ja: "幻想的", jaPhrase: "幻想的な雰囲気", en: "an ethereal, fantastical atmosphere" },
+    { ja: "デフォルメ強め", jaPhrase: "上品にデフォルメされた、こなれたイラスト表現", en: "gently deformed, artistically exaggerated proportions for a chic illustrative effect" },
+    { ja: "若々しく・見映えよく", jaPhrase: "肌をなめらかに・瞳を明るく・血色よく、少し若々しく見映えよく仕上げる微修正", en: "a subtle retouch for a slightly more youthful, polished look (smoother skin, brighter eyes, a healthy glow)" },
+    { ja: "背景と調和するイラスト化", jaPhrase: "写実的な写真編集ではなく、背景の配色・筆致・スタイライズ度に合わせて全身をイラストとして描き直し、切り貼りされた写真のように見えず作品全体に自然に馴染ませる", en: "fully redrawn as a stylized illustration rather than a photorealistic image, deformed and rendered to match the surrounding artwork's color palette, brushwork, and level of stylization so the figure blends seamlessly into the scene rather than looking like a pasted-in photo" }
+  ];
+  const selectedMoods = new Set(); // indices into MOODS
+  let snsOn = false;
+
+  const FACE_REF_OPTIONS = [
+    { ja: "参照画像を使わない", en: "" },
+    { ja: "写真の顔をそのまま使う", en: "preserving the likeness of the reference photo as closely as possible" },
+    { ja: "本人に似せたイラストにする", en: "a recognizable likeness of the reference photo, reimagined as an illustration, with the head angle, gaze direction, and pose freely reimagined to suit the scene rather than copied from the reference photo", def: true },
+    { ja: "雰囲気だけ", en: "only the general impression of the reference photo" }
+  ];
+  let faceRefChoice = null;
+
+  const FEATURES = [
+    { ja: "透明感のある肌", en: "luminous translucent skin", def: true },
+    { ja: "鼻筋の通った端正な顔立ち", en: "a straight, elegant nose and refined features", def: true },
+    { ja: "切れ長の目", en: "long, narrow almond eyes" },
+    { ja: "ふっくらとした頬", en: "a softly rounded face with full cheeks" },
+    { ja: "陶器のような肌", en: "smooth porcelain skin", def: true }
+  ];
+  const selectedFeatures = new Set(); // ja labels from FEATURES
+
+  const TEXT_STYLES = [
+    { ja: "モダン・ミニマルサンセリフ", en: "set in a clean, modern minimalist sans-serif typeface, editorial magazine style" },
+    { ja: "エレガントな筆記体", en: "rendered in an elegant, flowing cursive script" },
+    { ja: "ハイファッション誌の見出し風（太めコンデンス）", en: "set as a bold, condensed high-fashion magazine headline typeface" },
+    { ja: "ゴールド箔押しのシグネチャー風", en: "rendered as if gold-foil stamped, in a refined signature-style script" },
+    { ja: "タイプライター風のキャプション体", en: "set in a typewriter-style caption font, understated and documentary in feel" }
+  ];
+  let selectedTextStyle = null; // ja label from TEXT_STYLES
+
+  /* =========================================================
+     Section field data.
+     item = [ja, en] or [ja, en, tags]  tags = {f:[...], b:[...], s:[...]}
+  ========================================================= */
+  const SECTIONS = [
+    {
+      key: "step1", num: "1", title: "被写体の基本", sub: "性別・顔の特徴・瞳の色を選びます（複数カテゴリー・各1つまで）",
+      fields: [
+        { key: "gender", label: "性別", multi: false,
+          items: [["女性","female"], ["男性","male"]] },
+        { key: "faceFeature", label: "顔立ちの印象・雰囲気", multi: false, filterHint: "顔タイプで絞り込み", note: "顔全体から受ける印象のことばです（参照写真の有無に関わらず使えます）。写真からの変化量を指定したい場合は、上の「人物ポートレートのアレンジ」内の「顔立ち」を使ってください。",
+          items: [
+            ["可愛らしい顔立ち","cute facial features",{f:["CU"]}],
+            ["クールな顔立ち","cool, sharp facial features",{f:["CO","CC"]}],
+            ["エレガントな顔立ち","elegant facial features",{f:["EL","SE"]}],
+            ["精悍な顔立ち","sharp, striking facial features",{f:["CO"]}],
+            ["優しい顔立ち","gentle, soft facial features",{f:["FR","FE","SE"]}],
+            ["元気で活発な顔立ち","energetic, lively facial features",{f:["FR","AC","CC"]}],
+            ["たくましい顔立ち","strong, robust facial features",{f:["CO","AC"]}],
+            ["冷静で落ち着いた顔立ち","calm, composed facial features",{f:["EL","CO"]}],
+            ["おちゃらけた顔立ち","playful, goofy facial features",{f:["AC","CU"]}],
+            ["ふざけた顔立ち","silly, joking facial features",{f:["AC","CU"]}],
+            ["いたずらな顔立ち","mischievous facial features",{f:["CU","AC"]}],
+            ["アンニュイな顔立ち（気だるげでミステリアス、モデル風）","a languid, ennui-touched, mysterious facial impression, a model-like classic look",{f:["CO","EL"]}],
+            ["芯の強さを感じさせる顔立ち（意志の強さを秘めた凛とした雰囲気）","facial features conveying quiet inner strength, composed and dignified",{f:["CO","EL"]}],
+            ["どこか儚げな顔立ち（守ってあげたくなる透明感）","a faintly fragile, ethereal facial impression that evokes a protective instinct, beautifully contrasted with a strong gaze",{f:["FE","SE"]}],
+            ["彫りの深い／すっきりとした塩顔（骨格の美しさ・メイク映え）","sharply chiseled, clean-cut features with striking bone structure, a makeup-friendly face",{f:["CO","CC"]}],
+            ["あどけなさと大人っぽさが同居する顔立ち（アンビバレントな魅力）","facial features where childlike innocence and adult maturity coexist, an ambivalent charm that draws the eye",{f:["FR","SE"]}]
+          ] },
+        { key: "eyeColor", label: "瞳の色", multi: false,
+          items: [["ダークブラウン","dark brown eyes"],["ヘーゼル","hazel eyes"],["ブラウン","brown eyes"],["グリーン","green eyes"],["ブルー","blue eyes"],["グレー","gray eyes"]] }
+      ]
+    },
+    {
+      key: "step2", num: "2", title: "髪型・髪色", sub: "髪型は顔タイプ、色はパーソナルカラーで絞り込まれます",
+      fields: [
+        { key: "hairstyle", label: "髪型", multi: false, filterHint: "顔タイプで絞り込み", desc: true,
+          groups: [
+            { label: "ショート", items: [
+              ["ハンサムショート（前髪長めでクール・知的）","a handsome short cut with long, cool bangs and a sharp, intelligent impression",{f:["CO","CC"]}],
+              ["マッシュショート（丸みのあるマッシュシルエット）","a mash short cut with a round, mushroom-like silhouette, cute and distinctive",{f:["FR","CU","CC"]}],
+              ["くびれショート（トップにボリューム×襟足キュッ）","a curvy short cut with volume on top and a cinched nape for a slimming effect",{f:["FR","FE"]}],
+              ["ベリーショート（耳と襟足がすっきり）","a very short crop with the ears and nape neatly exposed",{f:["CO","AC"]}]
+            ]},
+            { label: "ボブ", items: [
+              ["前下がりボブ（前が長め・シャープで大人っぽい）","a front-longer bob, sharp and mature",{f:["CO","EL"]}],
+              ["タッセルボブ（切りっぱなしで今っぽい）","a blunt-cut tassel bob, trendy and easy to style",{f:["FR","CC"]}],
+              ["エアリーボブ（軽やかでふんわり）","an airy bob with soft, weightless movement",{f:["SE","FE"]}],
+              ["ミニボブ（あご上ですっきり）","a mini bob cut above the jawline, neat around the neck",{f:["FR","AC"]}]
+            ]},
+            { label: "ミディアム", items: [
+              ["外ハネミディアム（毛先を外側にハネさせカジュアル）","a flipped-out medium cut, casual and of-the-moment",{f:["FR","CU"]}],
+              ["レイヤーミディアム（軽さと立体感）","a layered medium cut with lightness and soft volume",{f:["SE","FE"]}],
+              ["ウルフカット（トップ丸み×襟足長め・個性的）","a wolf cut with rounded volume on top and a shaggy, dynamic texture",{f:["CC","AC"]}],
+              ["ワンカールミディアム（毛先ワンカールで上品）","a one-curl medium cut, refined and neat",{f:["FE","SE"]}]
+            ]},
+            { label: "ロング", items: [
+              ["ロングレイヤー（軽やかな動きをプラス）","long layers adding lightness and movement",{f:["FE","SE"]}],
+              ["スーパーロング（胸下〜腰までのツヤ髪）","super-long hair below the chest, highlighting glossy straight beauty",{f:["EL","FE"]}],
+              ["波ウェーブ（韓国風ロング・華やか）","Korean-style wave curls, glamorous and trendy",{f:["FE","CU"]}],
+              ["スパイラルパーマロング（立体ウェーブでボリューム）","spiral perm long hair with three-dimensional volume and an exotic mood",{f:["FE","EL"]}]
+            ]}
+          ] },
+        { key: "hairColor", label: "髪の色", multi: false, filterHint: "パーソナルカラーで絞り込み",
+          items: [
+            ["黒髪","black hair",{s:["WI","SU"]}],
+            ["茶髪","brown hair",{s:["AU","SP"]}],
+            ["明るい茶髪","light brown hair",{s:["SP","AU"]}],
+            ["ブロンド","blonde hair",{s:["SP","SU"]}],
+            ["プラチナブロンド","platinum blonde hair",{s:["SU","WI"]}],
+            ["赤毛","red hair",{s:["AU"]}],
+            ["シルバーグレー","silver gray hair",{s:["WI","SU"]}],
+            ["ミルクティーベージュ","milk-tea beige hair",{s:["SP","AU"]}],
+            ["ピンクブラウン","pink brown hair",{s:["SP"]}],
+            ["グレージュ","greige hair",{s:["SU"]}],
+            ["オリーブベージュ","olive beige hair",{s:["AU"]}]
+          ] }
+      ]
+    },
+    {
+      key: "step3", num: "3", title: "動作・ポーズ", sub: "表情・ポーズ・視線・アングルを選びます（絞り込みなし）",
+      fields: [
+        { key: "expression", label: "表情", multi: false,
+          items: [["微笑んでいる","smiling gently"],["にっこり笑顔","a beaming smile"],["満面の笑み","a full, radiant smile"],["自然な表情","a natural expression"],["真剣な表情","a serious expression"],["穏やかな表情","a calm expression"],["鋭い眼差し","a sharp gaze"],["誘惑的な表情","an alluring expression"],["キリッとしている","a crisp, sharp expression"],["堂々としている","a confident, dignified expression"],["元気いっぱい","full of energy"],["クールに構えている","a composed, cool demeanor"],["カメラを射抜くような鋭い眼差し（自信・挑戦的）","a piercing gaze that stares straight through the camera, confident and challenging"],["アンニュイな流し目・アンニュイな表情（気だるく遠くを見つめる）","an ennui-laden, far-away gaze, not looking directly at the camera, enigmatic and languid"],["挑発的な半笑い・余裕のある微笑み（小悪魔的な魅力）","a provocative half-smile, a confident and subtly mischievous smirk"],["自信に満ちたキリッとした表情（プロフェッショナルな雰囲気）","a confident, sharp expression with a professional air"]] },
+        { key: "pose", label: "ポーズ", multi: false,
+          items: [["正面を向いて立つ","standing facing forward"],["横向きに立つ","standing sideways"],["片手を腰に当てる","one hand on the hip"],["両手を上げる","both arms raised"],["椅子に座る","sitting on a chair"],["床に座る","sitting on the floor"],["走っている","running"],["腕を組んで立つ","standing with arms crossed"],["リラックスした姿勢","a relaxed posture"],["髪の毛をかき上げている","brushing hair back"],["振り返っている","looking back over the shoulder"],["斜め前を見ている","looking diagonally forward"],["両手を広げている","arms spread wide"],["片手を腰に、もう片方は肘に添える（自信と柔軟さ）","one hand on the hip, the other hand resting near the opposite elbow, confident yet relaxed"],["身体を斜めに傾けて腕を組む（ダイナミックな構図）","body turned at a slight angle, arms crossed, for a dynamic composition"],["髪をかき上げながら遠くを見つめる（ミステリアスで絵画的）","brushing hair back while gazing into the distance, mysterious and painterly"],["耳に髪をそっとかけながらカメラ目線（色っぽさと知性）","gently tucking hair behind the ear while looking at the camera, sensual and intelligent"],["椅子に座ったまま振り返ってカメラを見る（デスクワーク中の一瞬）","sitting at a desk, twisting around to glance back at the camera, as if just called out to"],["椅子の上で脚を組んでリラックス（トレンディな崩し）","sitting on a chair with legs elegantly crossed, a relaxed trendy pose"],["カメラに向かって優雅に歩いてくる途中（生命力・動き）","walking gracefully toward the camera, mid-stride, full of life and movement"]] },
+        { key: "gaze", label: "視線の方向", multi: false,
+          items: [["カメラを見る","looking at the camera"],["上を見る","looking up"],["下を見る","looking down"],["横を見る","looking to the side"],["遠くを見る","looking into the distance"],["斜め下を見る","looking diagonally down"],["斜め上を見る","looking diagonally up"],["上目遣いでカメラを見る（あどけなさ・小悪魔的）","an upward glance at the camera, innocent yet subtly mischievous"]] },
+        { key: "angle", label: "アングル", multi: false,
+          items: [["正面から","from the front"],["斜めから","from an angle"],["上から","from above"],["下から","from below"],["横顔","a side profile"]] }
+      ]
+    },
+    {
+      key: "step4", num: "4", title: "服装", sub: "スタイル・テイストは顔タイプ、アイテムは骨格（＋顔タイプ）、色はパーソナルカラーで絞り込まれます",
+      fields: [
+        { key: "styleTheme", label: "スタイル・テイスト", multi: false, filterHint: "顔タイプで絞り込み",
+          items: [
+            ["カジュアルスタイル","casual style",{f:["FR","CC"]}],
+            ["フレンチカジュアル","French casual style",{f:["FR","SE"]}],
+            ["ストリートスタイル","street style",{f:["CC","AC"]}],
+            ["ビジネススタイル","business style",{f:["EL","CO"]}],
+            ["クラシック","classic style",{f:["EL","SE"]}],
+            ["ゴシックロリータ","gothic lolita style",{f:["CU"]}],
+            ["ボヘミアン","bohemian style",{f:["FE","SE"]}],
+            ["ラグジュアリー","luxury style",{f:["EL"]}],
+            ["オリエンタルエスニック","oriental ethnic style",{f:["FE","SE"]}],
+            ["コンサバティブ","conservative style",{f:["EL","SE"]}],
+            ["スポーツ","sports style",{f:["AC","CC"]}],
+            ["スポーティースタイル","sporty style",{f:["AC","CC"]}],
+            ["エレガントスタイル","elegant style",{f:["EL","SE"]}],
+            ["サイバーパンク","cyberpunk style",{f:["CO","CC"]}]
+          ] },
+        { key: "tops", label: "トップス", multi: true, filterHint: "骨格・顔タイプで絞り込み",
+          items: [
+            ["Tシャツ","a T-shirt",{b:["NA","ST"],f:["FR","CC"]}],
+            ["シャツ","a shirt",{b:["ST"],f:["CO","EL"]}],
+            ["ポロシャツ","a polo shirt",{b:["ST"],f:["FR","CC"]}],
+            ["パーカー","a hoodie",{b:["NA"],f:["CC","AC"]}],
+            ["ニット","a knit top",{b:["WA","NA"],f:["FE","SE"]}],
+            ["セーター","a sweater",{b:["NA"],f:["FR","SE"]}],
+            ["ブラウス","a blouse",{b:["WA"],f:["FE","EL"]}],
+            ["タンクトップ","a tank top",{b:["ST"],f:["AC","CC"]}],
+            ["カッターシャツ","a dress shirt",{b:["ST"],f:["CO","EL"]}],
+            ["ジャージ","a jersey top",{b:["NA"],f:["AC","CC"]}],
+            ["白シャツ","a white shirt",{b:["ST"],f:["CO","EL"]}],
+            ["オープンカラーシャツ","an open-collar shirt",{b:["NA"],f:["FR","CC"]}],
+            ["ワークシャツ","a work shirt",{b:["NA"],f:["CC"]}],
+            ["チルデンニット","a Tilden knit",{b:["ST"],f:["EL","CO"]}],
+            ["ボートネックブラウス","a boat-neck blouse",{b:["ST"],f:["EL","FR"]}],
+            ["スクエアネック","a square-neck top",{b:["ST"],f:["EL"]}],
+            ["ホルターネック","a halter-neck top",{b:["WA"],f:["FE","CU"]}],
+            ["ハイネック","a high-neck top",{b:["ST"],f:["EL","CO"]}],
+            ["クロップド丈のパーカー","a cropped hoodie",{b:["WA"],f:["AC","CU"]}],
+            ["パフスリーブ","a puff-sleeve top",{b:["WA"],f:["CU","FE"]}],
+            ["フレアスリーブ","a flared-sleeve top",{b:["WA"],f:["FE","SE"]}]
+          ] },
+        { key: "bottoms", label: "ボトムス", multi: true, filterHint: "骨格で絞り込み",
+          items: [
+            ["ジーンズ","jeans",{b:["NA","ST"]}],
+            ["スキニーパンツ","skinny pants",{b:["ST"]}],
+            ["ワイドパンツ","wide pants",{b:["NA"]}],
+            ["ショートパンツ","shorts",{b:["ST"]}],
+            ["スラックス","slacks",{b:["ST"]}],
+            ["ミニスカート","a mini skirt",{b:["WA"]}],
+            ["ロングスカート","a long skirt",{b:["WA","NA"]}],
+            ["台形スカート","a trapezoid skirt",{b:["NA"]}],
+            ["タイトスカート","a tight skirt",{b:["ST"]}],
+            ["ゆったりとしたズボン","loose pants",{b:["NA"]}],
+            ["スリムパンツ","slim pants",{b:["ST"]}],
+            ["膝丈パンツ","knee-length pants",{b:["ST"]}],
+            ["チノパン","chinos",{b:["NA"]}],
+            ["カーゴパンツ","cargo pants",{b:["NA"]}],
+            ["デニムパンツ","denim pants",{b:["NA"]}],
+            ["フレアスカート","a flared skirt",{b:["WA"]}],
+            ["プリーツスカート","a pleated skirt",{b:["WA"]}],
+            ["マキシスカート","a maxi skirt",{b:["WA","NA"]}],
+            ["ラップスカート","a wrap skirt",{b:["WA"]}],
+            ["マーメイドスカート","a mermaid skirt",{b:["WA"]}]
+          ] },
+        { key: "onepiece", label: "ワンピース・スーツ", multi: true, filterHint: "骨格・顔タイプで絞り込み",
+          items: [
+            ["ミニドレス","a mini dress",{b:["WA"],f:["CU","AC"]}],
+            ["ロングドレス","a long dress",{b:["WA","NA"],f:["FE","EL"]}],
+            ["サマードレス","a summer dress",{b:["WA"],f:["FR","FE"]}],
+            ["エレガントなドレス","an elegant dress",{b:["ST","WA"],f:["EL","SE"]}],
+            ["オフショルダードレス","an off-shoulder dress",{b:["WA"],f:["FE","CU"]}],
+            ["ティアードワンピース","a tiered dress",{b:["NA","WA"],f:["FE","SE"]}],
+            ["バックレスドレス","a backless dress",{b:["ST"],f:["EL"]}],
+            ["チャイナドレス","a cheongsam",{b:["ST"],f:["EL","CO"]}],
+            ["ローブ・ア・ラ・フランセーズ","a robe à la française",{b:["WA"],f:["FE","EL"]}],
+            ["プリンセスラインドレス","a princess-line dress",{b:["WA"],f:["CU","FE"]}],
+            ["マーメイドラインドレス","a mermaid-line dress",{b:["WA"],f:["EL","FE"]}],
+            ["スーツ","a suit",{b:["ST"],f:["CO","EL"]}],
+            ["タキシード","a tuxedo",{b:["ST"],f:["CO","EL"]}]
+          ] },
+        { key: "outer", label: "アウター", multi: true, filterHint: "骨格で絞り込み",
+          items: [
+            ["デニムジャケット","a denim jacket",{b:["NA","ST"]}],
+            ["レザージャケット","a leather jacket",{b:["ST"]}],
+            ["トレンチコート","a trench coat",{b:["ST"]}],
+            ["ロングコート","a long coat",{b:["NA","ST"]}],
+            ["ブレザー","a blazer",{b:["ST"]}],
+            ["革ジャン","a leather biker jacket",{b:["ST"]}],
+            ["ウィンドブレーカー","a windbreaker",{b:["NA"]}],
+            ["テーラードジャケット","a tailored jacket",{b:["ST"]}],
+            ["スーベニアジャケット","a souvenir jacket",{b:["NA"]}],
+            ["ミリタリーブルゾン","a military blouson",{b:["NA"]}],
+            ["ライダースジャケット","a rider's jacket",{b:["ST"]}],
+            ["カジュアルジャケット","a casual jacket",{b:["NA"]}]
+          ] },
+        { key: "clothingColor", label: "服の色", multi: true, filterHint: "パーソナルカラーで絞り込み",
+          items: [
+            ["オフホワイト","off-white",{s:["SP","AU"]}],
+            ["ブラック","black",{s:["WI"]}],
+            ["ネイビー","navy",{s:["WI"]}],
+            ["キャメル","camel",{s:["AU"]}],
+            ["チャコールグレー","charcoal gray",{s:["WI"]}],
+            ["カーキ","khaki",{s:["AU"]}],
+            ["テラコッタ","terracotta",{s:["AU"]}],
+            ["ラベンダー","lavender",{s:["SU"]}],
+            ["ボルドー","bordeaux",{s:["AU","WI"]}],
+            ["マスタードイエロー","mustard yellow",{s:["AU"]}],
+            ["コーラルピンク","coral pink",{s:["SP"]}],
+            ["ディーププラム","deep plum",{s:["WI"]}],
+            ["アプリコット","apricot",{s:["SP"]}],
+            ["ローズゴールド","rose gold",{s:["SP","SU"]}],
+            ["ミントグリーン","mint green",{s:["SU"]}],
+            ["ダスティーローズ","dusty rose",{s:["SU"]}],
+            ["ピスタチオカラー","pistachio color",{s:["SU","SP"]}]
+          ] },
+        { key: "fabric", label: "服の素材", multi: true, filterHint: "骨格で絞り込み",
+          items: [
+            ["シフォン","chiffon",{b:["WA"]}],
+            ["レース","lace",{b:["WA"]}],
+            ["オーガンジー","organza",{b:["WA"]}],
+            ["サテン","satin",{b:["WA","ST"]}],
+            ["シルク","silk",{b:["WA"]}],
+            ["ベルベット","velvet",{b:["ST"]}],
+            ["エナメル","patent leather",{b:["ST"]}],
+            ["デニム","denim",{b:["NA"]}],
+            ["リネン","linen",{b:["NA"]}],
+            ["ツイード","tweed",{b:["ST"]}],
+            ["合成皮革","synthetic leather",{b:["ST","NA"]}],
+            ["ウール","wool",{b:["ST","NA"]}]
+          ] }
+      ]
+    },
+    {
+      key: "step5", num: "5", title: "小物・アクセサリー", sub: "骨格（＋顔タイプ）で絞り込まれます",
+      fields: [
+        { key: "accessories", label: "アクセサリー", multi: true, filterHint: "骨格・顔タイプで絞り込み",
+          items: [
+            ["つばの広い帽子","a wide-brim hat",{b:["NA"],f:["FE","SE"]}],
+            ["キャップ","a cap",{b:["NA"],f:["CC","AC"]}],
+            ["野球帽","a baseball cap",{b:["NA"],f:["AC","CC"]}],
+            ["サングラス","sunglasses",{f:["CO","CC"]}],
+            ["髪の色と同じフレームの細いメガネ","thin glasses matching the hair color",{f:["EL","CO"]}],
+            ["腕時計","a wristwatch",{f:["CO","EL"]}],
+            ["ブレスレット","a bracelet",{b:["WA"]}],
+            ["リング","a ring",{b:["ST","WA"]}],
+            ["ネックレス","a necklace",{b:["ST"]}],
+            ["チョーカー","a choker",{b:["WA"],f:["CU","CO"]}],
+            ["ピアス","pierced earrings",{b:["ST"]}],
+            ["イヤリング短め","short earrings",{b:["ST"]}],
+            ["イヤリング長め","long dangly earrings",{b:["WA"],f:["FE","EL"]}],
+            ["イヤーカフ","an ear cuff",{f:["CC","CO"]}],
+            ["バングル","a bangle",{b:["NA"]}],
+            ["ブローチ","a brooch",{b:["ST"],f:["EL","SE"]}],
+            ["スカーフ","a scarf",{b:["WA"],f:["FE","EL"]}],
+            ["アームカバー","an arm cover",{b:["NA"]}],
+            ["細ベルト","a thin belt",{b:["WA"]}],
+            ["バレッタ","a barrette",{f:["FE","CU"]}],
+            ["カチューシャ","a headband",{f:["CU","FR"]}],
+            ["レースの手袋","lace gloves",{b:["WA"],f:["FE","EL"]}],
+            ["ネクタイ","a necktie",{f:["CO","EL"]}],
+            ["リボン","a ribbon",{f:["CU","FE"]}],
+            ["アクセサリーなし（つけない）","no accessories",null,true]
+          ] },
+        { key: "bags", label: "バッグ", multi: true, filterHint: "骨格で絞り込み",
+          items: [
+            ["カバン","a bag",{b:["NA"]}],
+            ["ポーチ","a pouch",{b:["WA"]}],
+            ["ハンドバッグ","a handbag",{b:["ST"]}],
+            ["トートバッグ","a tote bag",{b:["NA"]}],
+            ["チェーンショルダーバッグ","a chain shoulder bag",{b:["WA"]}],
+            ["クラッチバッグ","a clutch bag",{b:["ST","WA"]}],
+            ["バスケット","a basket bag",{b:["NA"]}],
+            ["バッグなし（持たない）","no bag",null,true]
+          ] },
+        { key: "shoes", label: "靴", multi: true, filterHint: "骨格・顔タイプで絞り込み",
+          items: [
+            ["スニーカー","sneakers",{b:["NA"],f:["FR","AC","CC"]}],
+            ["ブーツ","boots",{b:["ST","NA"],f:["CO","CC"]}],
+            ["ショートブーツ","short boots",{b:["ST"],f:["CO"]}],
+            ["ニーハイブーツ","knee-high boots",{b:["ST"],f:["EL","CO"]}],
+            ["ワークブーツ","work boots",{b:["NA"],f:["CC"]}],
+            ["ローファー","loafers",{b:["ST"],f:["EL","CO"]}],
+            ["ドライビングシューズ","driving shoes",{b:["ST"],f:["CO"]}],
+            ["パンプス","pumps",{b:["ST"],f:["EL","SE"]}],
+            ["バレエシューズ","ballet flats",{b:["WA"],f:["CU","FE"]}],
+            ["ハイヒール","high heels",{b:["ST","WA"],f:["EL","FE"]}],
+            ["ミュール","mules",{b:["WA"],f:["FE","EL"]}],
+            ["ストラップサンダル","strap sandals",{b:["WA"],f:["FE","CU"]}],
+            ["サンダル","sandals",{b:["NA"],f:["FR","SE"]}],
+            ["紳士靴","men's dress shoes",{b:["ST"],f:["CO","EL"]}],
+            ["運動靴","athletic shoes",{b:["NA"],f:["AC","CC"]}],
+            ["スリッパ","slippers",{b:["NA"]}]
+          ] }
+      ]
+    },
+    {
+      key: "step6", num: "6", title: "背景・あしらう小物", sub: "ロケーション、時間帯・季節・天候・雰囲気に加え、画面に添える小物・モチーフを選びます（絞り込みなし）",
+      fields: [
+        { key: "location", label: "ロケーション", multi: true, desc: true,
+          groups: [
+            { label: "アーバン・都会", items: [
+              ["高層ビルのルーフトップ（都市の夜景）","a rooftop terrace atop a skyscraper, overlooking a glittering city skyline at night"],
+              ["コンクリート打ちっぱなしのミニマル建築","minimalist exposed-concrete architecture, stark and modern"],
+              ["ネオンが灯る夜の繁華街","a neon-lit downtown street at night, vibrant and cinematic"],
+              ["ガラス張りの近代的なアトリウム","a modern glass atrium, flooded with light and architectural lines"],
+              ["都会的なインダストリアルロフト","an urban industrial loft with exposed brick and steel"],
+              ["高架下のストリートアート","an underpass wall covered in street art, an edgy urban backdrop"]
+            ]},
+            { label: "ヨーロッパ・クラシック", items: [
+              ["パリの石畳の路地とカフェテラス","a cobblestone Parisian side street with a charming café terrace"],
+              ["ヨーロッパの旧市街の広場","a historic European old-town square at golden hour"],
+              ["宮殿の大理石の階段","a grand marble staircase inside a European palace"],
+              ["天井まで届く本棚のクラシックな図書館","a classic library with towering floor-to-ceiling bookshelves"],
+              ["ヴィンテージホテルのロビー","an elegant vintage hotel lobby with old-world charm"]
+            ]},
+            { label: "ラグジュアリー", items: [
+              ["五つ星ホテルのスイートルーム","a five-star hotel suite, refined and luxurious"],
+              ["夕暮れのインフィニティプールサイド","an infinity pool at dusk, overlooking a dramatic horizon"],
+              ["プライベートヨットのデッキ","the deck of a private yacht, breezy and glamorous"],
+              ["高級ブティックの店内","the interior of a high-end fashion boutique"],
+              ["グランドピアノのあるサロン","an elegant salon room with a grand piano"]
+            ]},
+            { label: "ナチュラル・自然（エディトリアル）", items: [
+              ["夕陽のラベンダー畑","a lavender field bathed in sunset light"],
+              ["霧に包まれた針葉樹の森","a mist-shrouded pine forest, moody and atmospheric"],
+              ["黄金色に輝く麦畑","a golden wheat field glowing in the late-afternoon light"],
+              ["断崖絶壁からの絶景","a dramatic cliffside overlook with a sweeping view"],
+              ["現代建築と調和する日本庭園","a serene Japanese garden set against modern architecture"]
+            ]},
+            { label: "アート・ギャラリー", items: [
+              ["モノクロームのアートギャラリー","a minimalist monochrome art gallery"],
+              ["現代美術館のインスタレーション空間","an immersive installation space inside a contemporary art museum"],
+              ["大理石の噴水がある中庭","a courtyard with a classical marble fountain"]
+            ]},
+            { label: "撮影スタジオ", items: [
+              ["ミニマルな白背景の撮影スタジオ","a minimalist white-cyclorama photo studio"],
+              ["陰影を活かしたグレーの撮影スタジオ","a moody gray-backdrop photo studio, shaped by dramatic shadow"]
+            ]}
+          ] },
+        { key: "timeOfDay", label: "時間帯", multi: false,
+          items: [["朝","morning"],["昼","midday"],["夕方","evening"],["夜","night"],["深夜","late night"]] },
+        { key: "weatherSeason", label: "季節", multi: false,
+          items: [["春","spring"],["夏","summer"],["秋","autumn"],["冬","winter"]] },
+        { key: "weather", label: "天候", multi: false,
+          items: [["晴れ","sunny"],["曇り","cloudy"],["雨","rainy"],["雪","snowy"],["霧","foggy"]] },
+        { key: "atmosphere", label: "雰囲気", multi: false,
+          items: [["明るい","bright"],["暗い","dark"],["神秘的","mysterious"],["ロマンチック","romantic"],["ドラマチック","dramatic"]] },
+        { key: "motif", label: "あしらう小物・モチーフ", multi: true, desc: true,
+          items: [
+            ["デジタルガジェット系（スマホ×イヤホン）","a smartphone, wireless earbuds, a smartwatch, and charging cables"],
+            ["バラとカスミソウ（花束）","a bouquet of roses and baby's breath (gypsophila)"],
+            ["コーヒーセットとクッキー（ミル×フィルター）","a coffee grinder, a paper coffee filter and dripper, a cup of coffee, and a plate of cookies"],
+            ["リボンとプレゼント箱（ギフト）","wrapped gift boxes and satin ribbons"],
+            ["ユリとグリーン（観葉植物）","white lilies and lush green potted plants"],
+            ["フォトフレームと時計（インテリア小物）","a vintage photo frame and a classic clock"],
+            ["ネックレス・チェーンアクセサリー","delicate necklaces and layered chain accessories"],
+            ["シャボン玉とスーパーボール（遊び心）","iridescent soap bubbles and colorful bouncy balls"],
+            ["和柄のにおい袋と扇子（和小物）","a Japanese-patterned scented sachet and a folding fan"],
+            ["クリスマスの小物（オーナメント）","Christmas ornaments, string lights, a small pine wreath, and pine cones"],
+            ["スワロフスキーのアクセサリー（きらめくクリスタル）","sparkling Swarovski crystal jewelry and accessories"],
+            ["サングラスとキーホルダー","a pair of sunglasses and a decorative keychain charm"]
+          ] }
+      ]
+    },
+    {
+      key: "step7", num: "7", title: "照明・色調", sub: "光の種類・方向、色調・ムードを選びます（絞り込みなし）",
+      fields: [
+        { key: "lighting", label: "照明の種類", multi: false,
+          items: [["自然光","natural light"],["柔らかい自然光","soft natural light"],["強い自然光","strong natural light"],["朝日","morning sunlight"],["夕日","sunset light"],["窓からの光","light from a window"],["スタジオライト","studio lighting"],["ソフトライト","soft light"],["キャンドルライト","candlelight"],["ネオンライト","neon light"]] },
+        { key: "lightDirection", label: "光の方向", multi: false,
+          items: [["フロントライト（正面から）","front light"],["サイドライト（横から）","side light"],["バックライト（後ろから）","backlight"],["トップライト（上から）","top light"],["リムライト（輪郭を照らす）","rim light"]] },
+        { key: "colorTone", label: "色調・トーン", multi: false,
+          items: [["暖かい色調","a warm tone"],["オレンジがかった","an orange-tinted tone"],["ゴールデンアワー","golden hour tone"],["冷たい色調","a cool tone"],["青みがかった","a blue-tinted tone"],["自然な色調","a natural tone"],["鮮やかな色調","a vivid tone"],["高彩度","high saturation"]] },
+        { key: "mood", label: "ムード・雰囲気", multi: false,
+          items: [["明るい","a bright mood"],["爽やか","a refreshing mood"],["暗い","a dark mood"],["ミステリアス","a mysterious mood"],["柔らかい","a soft mood"],["優しい","a gentle mood"],["力強い","a powerful mood"]] }
+      ]
+    },
+    {
+      key: "step8", num: "8", title: "スタイル", sub: "画風、デフォルメの度合い、仕上げ効果、構図、比率を選びます（絞り込みなし）",
+      fields: [
+        { key: "artStyle", label: "画風", multi: false, note: "初期値は「華やかな商業イラスト」です。",
+          items: [
+            ["やわらかなイラスト（コラージュ風）","a soft collage-style illustration, painted artwork, not a photograph"],
+            ["華やかな商業イラスト","a vivid commercial illustration style, digitally painted artwork with visible brushwork, not a photograph",null,false,{def:true}],
+            ["18世紀肖像画風（油絵）","an 18th-century oil portrait style, in the manner of a court painter such as Vigée Le Brun, painted canvas texture, not a photograph"],
+            ["水彩と淡い光の絵","a soft watercolor painting with delicate light, visible paper texture and pigment bleed, not a photograph"],
+            ["現代的なイラストレーション","a contemporary digital illustration, flat painted shading, not a photograph"],
+            ["写実的なポートレート","a photorealistic portrait"],
+            ["グラフィカルな広告ポスター風","a bold commercial advertisement poster layout: the background is broken into solid flat color-block panels in contrasting hues, layered torn-paper collage fragments, star-burst gold sparkle highlights, and large bold poster typography integrated into the layout; the setting is suggested only through small inset illustrations or graphic motifs, never as a literal photographed environment or realistic background",null,false,{fav:true}],
+            ["アニメ塗りイラスト","a Japanese anime/manga illustration style: flat cel-shaded coloring, clean bold ink outlines, simplified stylized eyes and facial features, no photographic skin texture, no camera lens effects, definitely not a photograph"]
+          ] },
+        { key: "deform", label: "デフォルメの度合い", multi: false, note: "初期値は「ほどよく」。※「しっかり（アニメ寄り）」にする場合、ページ上部の「人物ポートレートのアレンジ」の「参照画像の効かせ方」を「本人に似せたイラストにする」にすると、リアルになりすぎず適度に似ます。",
+          items: [
+            ["ひかえめ（写実寄り）","a restrained, near-realistic level of stylization"],
+            ["ほどよく（半写実）","a moderate, semi-realistic level of stylization",null,false,{def:true}],
+            ["しっかり（アニメ寄り）","a strongly stylized anime look: flat cel-shaded coloring, clean bold line art, simplified facial rendering, no photographic skin texture or pores"]
+          ] },
+        { key: "effects", label: "画像効果・仕上げ", multi: true,
+          items: [["グロー効果","a glow effect"],["レンズフレア","lens flare"],["深度ぼけ","depth-of-field blur"],["シャープ","sharp detail"],["ソフトフォーカス","soft focus"],["高コントラスト","high contrast"],["低コントラスト","low contrast"],["高彩度","high saturation"],["低彩度","low saturation"]] },
+        { key: "composition", label: "構図", multi: false, note: "バストアップ／ポートレートには縦長4:5・3:4、全身には縦長2:3・9:16の組み合わせがおすすめです。横長16:9などのワイド比率で寄った構図を選ぶと、頭が見切れやすくなります。",
+          items: [
+            ["バストアップ（顔・肩・胸元まで）","a bust-up shot showing the face, shoulders, and upper chest, with the face kept centered in the frame"],
+            ["3/4バストアップ（やや引き気味）","a slightly wider three-quarter bust-up shot, a touch more zoomed out than a standard bust-up, with the face kept centered in the frame"],
+            ["ポートレート（顔〜鎖骨中心）","a portrait shot centered on the face down to the collarbone, the face as the clear focal point, kept centered in the frame"],
+            ["上半身（腰上まで）","an upper-body shot from the waist up, with the face kept centered in the frame"],
+            ["全身","a full-body composition"],
+            ["ロングショット","a long-shot composition"],
+            ["クローズアップ（顔を画面いっぱいに大きく）","a close-up shot with the face and full hairstyle filling most of the frame, the entire head kept within frame"]
+          ] },
+        { key: "aspectRatio", label: "アスペクト比", multi: false,
+          items: [
+            ["正方形 (1:1)","a square format, 1:1 aspect ratio"],
+            ["縦長 4:5（インスタ向き・バストアップに最適）","a vertical 4:5 aspect ratio, ideal for a bust-up shot, Instagram-friendly"],
+            ["縦長 3:4（雑誌風ポートレート）","a vertical 3:4 aspect ratio, a magazine-style portrait format"],
+            ["縦長 2:3（全身・バストアップ向き）","a vertical 2:3 aspect ratio, well suited to full-body or bust-up shots"],
+            ["縦長 9:16（スマホ壁紙）","a vertical 9:16 aspect ratio, a tall mobile-wallpaper format"],
+            ["横長 16:9","a wide 16:9 aspect ratio"],
+            ["横長 4:3","a wide 4:3 aspect ratio"],
+            ["ワイド 21:9","an ultrawide 21:9 aspect ratio"]
+          ] }
+      ]
+    }
+  ];
+
+  /* =========================================================
+     Build STEP0 diagnosis chips
+  ========================================================= */
+  function buildDiagGrid(gridEl, list, diagKey) {
+    list.forEach(t => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip diag-chip";
+      chip.setAttribute("aria-pressed", "false");
+      chip.innerHTML = `<span class="ja">${t.ja}</span>` + (t.desc ? `<span class="en" style="font-family:inherit;">${t.desc}</span>` : "");
+      chip.addEventListener("click", () => {
+        if (diag[diagKey] === t.code) {
+          diag[diagKey] = null;
+          chip.setAttribute("aria-pressed", "false");
+        } else {
+          gridEl.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+          diag[diagKey] = t.code;
+          chip.setAttribute("aria-pressed", "true");
+        }
+        applyFilters();
+        update();
+      });
+      gridEl.appendChild(chip);
+    });
+  }
+  buildDiagGrid(document.getElementById("faceTypeGrid"), FACE_TYPES, "face");
+  buildDiagGrid(document.getElementById("seasonTypeGrid"), SEASON_TYPES, "season");
+  buildDiagGrid(document.getElementById("bodyTypeGrid"), BODY_TYPES, "body");
+
+  const filterSwitch = document.getElementById("filterSwitch");
+  filterSwitch.addEventListener("click", () => { filterOn = !filterOn; filterSwitch.setAttribute("aria-checked", String(filterOn)); applyFilters(); });
+  filterSwitch.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); filterOn = !filterOn; filterSwitch.setAttribute("aria-checked", String(filterOn)); applyFilters(); } });
+
+  // Portrait mood chips
+  const moodGrid = document.getElementById("moodGrid");
+  MOODS.forEach((m, i) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip mood";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${m.ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedMoods.has(i)) { selectedMoods.delete(i); chip.setAttribute("aria-pressed", "false"); }
+      else { selectedMoods.add(i); chip.setAttribute("aria-pressed", "true"); }
+      update();
+    });
+    moodGrid.appendChild(chip);
+  });
+
+  // Face-reference strength (single-select, with def badge)
+  const faceRefGrid = document.getElementById("faceRefGrid");
+  FACE_REF_OPTIONS.forEach(o => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${o.def ? "◎ " : ""}${o.ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (faceRefChoice === o.ja) { faceRefChoice = null; chip.setAttribute("aria-pressed", "false"); }
+      else {
+        faceRefGrid.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+        faceRefChoice = o.ja; chip.setAttribute("aria-pressed", "true");
+      }
+      update();
+    });
+    chip.dataset.ja = o.ja;
+    faceRefGrid.appendChild(chip);
+  });
+  document.getElementById("faceRefRandom").addEventListener("click", () => {
+    const chips = Array.from(faceRefGrid.querySelectorAll(".chip"));
+    chips[Math.floor(Math.random() * chips.length)].click();
+  });
+
+  // Facial features vs. reference photo (multi-select, with def badges)
+  const featuresGrid = document.getElementById("featuresGrid");
+  FEATURES.forEach(o => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${o.def ? "◎ " : ""}${o.ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedFeatures.has(o.ja)) { selectedFeatures.delete(o.ja); chip.setAttribute("aria-pressed", "false"); }
+      else { selectedFeatures.add(o.ja); chip.setAttribute("aria-pressed", "true"); }
+      update();
+    });
+    chip.dataset.ja = o.ja;
+    featuresGrid.appendChild(chip);
+  });
+  document.getElementById("featuresRandom").addEventListener("click", () => {
+    selectedFeatures.clear();
+    featuresGrid.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+    const chips = Array.from(featuresGrid.querySelectorAll(".chip"));
+    const n = 1 + Math.floor(Math.random() * 2);
+    chips.slice().sort(() => Math.random() - 0.5).slice(0, n).forEach(c => c.click());
+  });
+
+  // Text style for catch-copy (single-select)
+  const textStyleGrid = document.getElementById("textStyleGrid");
+  TEXT_STYLES.forEach(o => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.setAttribute("aria-pressed", "false");
+    chip.innerHTML = `<span class="ja">${o.ja}</span>`;
+    chip.addEventListener("click", () => {
+      if (selectedTextStyle === o.ja) { selectedTextStyle = null; chip.setAttribute("aria-pressed", "false"); }
+      else {
+        textStyleGrid.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+        selectedTextStyle = o.ja; chip.setAttribute("aria-pressed", "true");
+      }
+      update();
+    });
+    chip.dataset.ja = o.ja;
+    textStyleGrid.appendChild(chip);
+  });
+  document.getElementById("textStyleRandom").addEventListener("click", () => {
+    const chips = Array.from(textStyleGrid.querySelectorAll(".chip"));
+    chips[Math.floor(Math.random() * chips.length)].click();
+  });
+  const catchCopyInput = document.getElementById("catchCopy");
+  const subTextInput = document.getElementById("subText");
+
+  // SNS profile reference toggle
+  const snsSwitch = document.getElementById("snsSwitch");
+  const snsBody = document.getElementById("snsBody");
+  function setSns(on) {
+    snsOn = on;
+    snsSwitch.setAttribute("aria-checked", String(on));
+    snsBody.hidden = !on;
+    update();
+  }
+  snsSwitch.addEventListener("click", () => setSns(!snsOn));
+  snsSwitch.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); setSns(!snsOn); } });
+
+  const portraitFeaturesInput = document.getElementById("portraitFeatures");
+  const snsTextInput = document.getElementById("snsText");
+  [portraitFeaturesInput, snsTextInput, catchCopyInput, subTextInput].forEach(el => el.addEventListener("input", update));
+
+  /* =========================================================
+     State + rendering for SECTIONS
+  ========================================================= */
+  const state = {}; // state[fieldKey] = Set (multi) or string|null (single)
+  const filterableChips = []; // {el, tags}
+  const fieldChips = {}; // fieldKey -> [chip elements] (all chips belonging to that field, across sub-groups)
+  const fieldWraps = {}; // fieldKey -> [DOM elements to show/hide] (label + grid(s))
+  const fieldExclusiveJa = {}; // fieldKey -> ja label of its exclusive "none" chip, if any
+  const sectionCards = {}; // sec.key -> card element
+  const controls = document.getElementById("controls");
+  const diagCard = document.getElementById("diagCard");
+
+  function randomizeField(field) {
+    if (typeof clothingFreeMode !== "undefined" && clothingFreeMode && CLOTHING_DETAIL_KEYS.includes(field.key)) return;
+    const chips = fieldChips[field.key];
+    if (!chips) return;
+    const visible = chips.filter(c => !c.classList.contains("hidden-by-filter"));
+    if (!visible.length) return;
+    if (field.multi) {
+      chips.forEach(c => { if (c.getAttribute("aria-pressed") === "true") c.click(); });
+      const n = Math.min(visible.length, 1 + Math.floor(Math.random() * 3));
+      const shuffled = visible.slice().sort(() => Math.random() - 0.5).slice(0, n);
+      shuffled.forEach(c => c.click());
+    } else {
+      const pick = visible[Math.floor(Math.random() * visible.length)];
+      pick.click();
+    }
+  }
+
+  SECTIONS.forEach(sec => {
+    const card = document.createElement("section");
+    card.className = "card";
+    card.innerHTML = `<div class="cat-head"><div class="cat-title"><span class="num">STEP&nbsp;${sec.num}</span>${sec.title}</div></div><p class="cat-sub">${sec.sub}</p>`;
+    controls.appendChild(card);
+    sectionCards[sec.key] = card;
+
+    sec.fields.forEach(field => {
+      state[field.key] = field.multi ? new Set() : null;
+      const fieldChipEls = []; // all chip elements belonging to this field, across sub-groups
+      fieldChips[field.key] = fieldChipEls;
+      fieldWraps[field.key] = [];
+
+      const label = document.createElement("div");
+      label.className = "group-label";
+      const labelLeft = document.createElement("span");
+      labelLeft.textContent = field.label + (field.multi ? "（複数選択可）" : "");
+      label.appendChild(labelLeft);
+      const labelRight = document.createElement("span");
+      labelRight.className = "label-right";
+      if (field.filterHint) { const h = document.createElement("span"); h.className = "hint"; h.textContent = field.filterHint; labelRight.appendChild(h); }
+      const rndLink = document.createElement("button");
+      rndLink.type = "button";
+      rndLink.className = "mini-random";
+      rndLink.textContent = "この項目だけランダム";
+      rndLink.addEventListener("click", () => randomizeField(field));
+      labelRight.appendChild(rndLink);
+      label.appendChild(labelRight);
+      card.appendChild(label);
+      fieldWraps[field.key].push(label);
+      if (field.note) {
+        const note = document.createElement("p");
+        note.className = "field-hint";
+        note.style.margin = "-2px 0 10px";
+        note.textContent = field.note;
+        card.appendChild(note);
+        fieldWraps[field.key].push(note);
+      }
+
+      function makeChip(ja, en, tags, exclusive, meta) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip" + (exclusive ? " exclude" : "") + (meta && meta.fav ? " fav" : "");
+        chip.setAttribute("aria-pressed", "false");
+        const badge = (meta && meta.fav ? "♥ " : "") + (meta && meta.def ? "◎ " : "");
+        chip.innerHTML = field.desc
+          ? `<span class="ja">${badge}${ja}</span><span class="en">${en}</span>`
+          : `<span class="ja">${badge}${ja}</span>`;
+        if (exclusive) fieldExclusiveJa[field.key] = ja;
+        chip.addEventListener("click", () => {
+          if (field.multi) {
+            const set = state[field.key];
+            if (exclusive) {
+              if (set.has(ja)) { set.delete(ja); chip.setAttribute("aria-pressed", "false"); }
+              else {
+                set.clear();
+                fieldChipEls.forEach(c => c.setAttribute("aria-pressed", "false"));
+                set.add(ja); chip.setAttribute("aria-pressed", "true");
+              }
+            } else {
+              const exJa = fieldExclusiveJa[field.key];
+              if (exJa && set.has(exJa)) {
+                set.delete(exJa);
+                const exChip = fieldChipEls.find(c => c.dataset.ja === exJa);
+                if (exChip) exChip.setAttribute("aria-pressed", "false");
+              }
+              if (set.has(ja)) { set.delete(ja); chip.setAttribute("aria-pressed", "false"); }
+              else { set.add(ja); chip.setAttribute("aria-pressed", "true"); }
+            }
+          } else {
+            if (state[field.key] === ja) {
+              state[field.key] = null;
+              chip.setAttribute("aria-pressed", "false");
+            } else {
+              fieldChipEls.forEach(c => c.setAttribute("aria-pressed", "false"));
+              state[field.key] = ja;
+              chip.setAttribute("aria-pressed", "true");
+            }
+          }
+          update();
+        });
+        chip.dataset.ja = ja;
+        chip.dataset.en = en;
+        fieldChipEls.push(chip);
+        if (tags) filterableChips.push({ el: chip, tags });
+        return chip;
+      }
+
+      if (field.groups) {
+        field.groups.forEach(g => {
+          const subLabel = document.createElement("div");
+          subLabel.className = "group-label sub";
+          subLabel.style.cssText = "font-size:12px;margin:10px 0 6px;padding-top:8px;";
+          subLabel.textContent = g.label;
+          card.appendChild(subLabel);
+          const grid = document.createElement("div");
+          grid.className = "chip-grid" + (field.desc ? " wide" : " narrow");
+          card.appendChild(grid);
+          g.items.forEach(([ja, en, tags, exclusive, meta]) => grid.appendChild(makeChip(ja, en, tags, exclusive, meta)));
+          fieldWraps[field.key].push(subLabel, grid);
+        });
+      } else {
+        const grid = document.createElement("div");
+        grid.className = "chip-grid" + (field.desc ? " wide" : " narrow");
+        card.appendChild(grid);
+        field.items.forEach(([ja, en, tags, exclusive, meta]) => grid.appendChild(makeChip(ja, en, tags, exclusive, meta)));
+        fieldWraps[field.key].push(grid);
+      }
+    });
+  });
+
+  /* =========================================================
+     "服装・靴はAIにおまかせ" toggle for STEP4 (styleTheme/tops/bottoms/onepiece/outer/clothingColor/fabric) + shoes (STEP5)
+  ========================================================= */
+  const CLOTHING_DETAIL_KEYS = ["styleTheme", "tops", "bottoms", "onepiece", "outer", "clothingColor", "fabric", "shoes"];
+  let clothingFreeMode = false;
+  let resetClothingFree = () => {};
+  (function setupClothingFreeToggle() {
+    const step4Card = sectionCards["step4"];
+    if (!step4Card) return;
+    const toggleRow = document.createElement("div");
+    toggleRow.className = "toggle-row card-header";
+    toggleRow.style.cssText = "margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--border);";
+    toggleRow.innerHTML = `
+      <div>
+        <div class="label">服装・靴はAIにおまかせする</div>
+        <p class="sub">アイテムを個別に選ばず、STEP 0で選んだ骨格・パーソナルカラーの雰囲気だけを伝えて、具体的な服装・靴は画像生成AIの判断に委ねます（アクセサリー・バッグは対象外／各項目の「なし」で個別に外せます）</p>
+      </div>
+      <div class="switch" id="clothingFreeSwitch" role="switch" aria-checked="false" tabindex="0"><div class="knob"></div></div>
+    `;
+    const catHead = step4Card.querySelector(".cat-head");
+    catHead.parentNode.insertBefore(toggleRow, catHead.nextSibling.nextSibling); // after cat-head + cat-sub
+
+    const sw = toggleRow.querySelector("#clothingFreeSwitch");
+    const allFields = SECTIONS.flatMap(s => s.fields);
+    function setClothingFree(on) {
+      clothingFreeMode = on;
+      sw.setAttribute("aria-checked", String(on));
+      CLOTHING_DETAIL_KEYS.forEach(key => {
+        const field = allFields.find(f => f.key === key);
+        if (on) {
+          // clear any current selections in this field
+          if (field.multi) { fieldChips[key].forEach(c => { if (c.getAttribute("aria-pressed") === "true") c.click(); }); }
+          else { const pressed = fieldChips[key].find(c => c.getAttribute("aria-pressed") === "true"); if (pressed) pressed.click(); }
+        }
+        fieldWraps[key].forEach(el => el.classList.toggle("hidden-by-filter", on));
+      });
+      update();
+    }
+    sw.addEventListener("click", () => setClothingFree(!clothingFreeMode));
+    sw.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); setClothingFree(!clothingFreeMode); } });
+    resetClothingFree = () => setClothingFree(false);
+  })();
+
+  function applyFilters() {
+    filterableChips.forEach(({ el, tags }) => {
+      let visible = true;
+      if (filterOn) {
+        if (diag.face && tags.f && !tags.f.includes(diag.face)) visible = false;
+        if (diag.body && tags.b && !tags.b.includes(diag.body)) visible = false;
+        if (diag.season && tags.s && !tags.s.includes(diag.season)) visible = false;
+      }
+      el.classList.toggle("hidden-by-filter", !visible);
+    });
+  }
+
+  /* =========================================================
+     Prompt assembly
+  ========================================================= */
+  function fieldAllItems(field) {
+    return field.groups ? field.groups.flatMap(g => g.items) : field.items;
+  }
+
+  function itemsOf(fieldKey) {
+    // returns array of [ja,en] currently selected for that field, in original item order
+    const sec = SECTIONS.find(s => s.fields.some(f => f.key === fieldKey));
+    const field = sec.fields.find(f => f.key === fieldKey);
+    const all = fieldAllItems(field);
+    const v = state[fieldKey];
+    if (field.multi) {
+      return all.filter(([ja]) => v.has(ja));
+    } else {
+      return v ? all.filter(([ja]) => ja === v) : [];
+    }
+  }
+
+  function block(fieldKeys, sep) {
+    const jaParts = [], enParts = [];
+    fieldKeys.forEach(k => {
+      itemsOf(k).forEach(([ja, en]) => { jaParts.push(ja); enParts.push(en); });
+    });
+    return { ja: jaParts.join(sep.ja), en: enParts.join(sep.en) };
+  }
+
+  function update() {
+    const jaBlocks = [], enBlocks = [];
+
+    // subject: gender
+    const genderJa = state.gender;
+    if (genderJa) { jaBlocks.push(genderJa); enBlocks.push(itemsOf("gender")[0][1]); }
+
+    // physical features (+ face-type diagnosis phrase)
+    const featB = block(["faceFeature", "eyeColor"], { ja: "、", en: ", " });
+    let featJa = featB.ja, featEn = featB.en;
+    if (diag.face) {
+      const ft = FACE_TYPES.find(t => t.code === diag.face);
+      featJa = featJa ? `${featJa}、${ft.ja}の雰囲気` : `${ft.ja}の雰囲気`;
+      featEn = featEn ? `${featEn}, ${ft.en}` : ft.en;
+    }
+    if (featJa) { jaBlocks.push(featJa); enBlocks.push(featEn); }
+
+    // hair
+    const hairB = block(["hairstyle", "hairColor"], { ja: "、", en: ", " });
+    if (hairB.ja) { jaBlocks.push(hairB.ja); enBlocks.push(hairB.en); }
+
+    // pose/expression
+    const poseB = block(["expression", "pose", "gaze", "angle"], { ja: "、", en: ", " });
+    if (poseB.ja) { jaBlocks.push(poseB.ja); enBlocks.push(poseB.en); }
+
+    // style theme
+    const styleB = block(["styleTheme"], { ja: "、", en: ", " });
+    if (styleB.ja) { jaBlocks.push(styleB.ja); enBlocks.push(styleB.en); }
+
+    // clothing (+ body-type diagnosis phrase)
+    const clothB = block(["tops", "bottoms", "onepiece", "outer", "accessories", "bags", "shoes", "fabric"], { ja: "、", en: ", " });
+    let clothJa = clothB.ja, clothEn = clothB.en;
+    if (diag.body) {
+      const bt = BODY_TYPES.find(t => t.code === diag.body);
+      clothJa = clothJa ? `${clothJa}、骨格${bt.ja}タイプに似合うスタイリング` : `骨格${bt.ja}タイプに似合うスタイリング`;
+      clothEn = clothEn ? `${clothEn}, ${bt.en}` : bt.en;
+    }
+    if (clothJa) { jaBlocks.push(clothJa); enBlocks.push(clothEn); }
+
+    // clothing color (+ personal color diagnosis phrase)
+    const colorB = block(["clothingColor"], { ja: "、", en: ", " });
+    let colorJa = colorB.ja, colorEn = colorB.en;
+    if (diag.season) {
+      const st = SEASON_TYPES.find(t => t.code === diag.season);
+      colorJa = colorJa ? `${colorJa}を中心とした、パーソナルカラー${st.ja}の配色` : `パーソナルカラー${st.ja}の配色`;
+      colorEn = colorEn ? `a color palette centered on ${colorEn}, in line with ${st.en}` : `a color palette in line with ${st.en}`;
+    }
+    if (colorJa) { jaBlocks.push(colorJa); enBlocks.push(colorEn); }
+
+    // background
+    const bgB = block(["location"], { ja: "、", en: ", " });
+    if (bgB.ja) { jaBlocks.push(bgB.ja); enBlocks.push(bgB.en); }
+
+    // motif
+    const motifB = block(["motif"], { ja: "、", en: ", " });
+    if (motifB.ja) { jaBlocks.push(`画面に添える小物として${motifB.ja}`); enBlocks.push(motifB.en); }
+
+    // time/season/weather/atmosphere
+    const timeB = block(["timeOfDay", "weatherSeason", "weather", "atmosphere"], { ja: "、", en: ", " });
+    if (timeB.ja) { jaBlocks.push(timeB.ja); enBlocks.push(timeB.en); }
+
+    // lighting
+    const lightB = block(["lighting", "lightDirection", "colorTone", "mood"], { ja: "、", en: ", " });
+    if (lightB.ja) { jaBlocks.push(lightB.ja); enBlocks.push(lightB.en); }
+
+    // quality/style/effects/composition/aspect/keywords
+    const qualB = block(["artStyle", "deform", "effects", "composition", "aspectRatio"], { ja: "、", en: ", " });
+    if (qualB.ja) { jaBlocks.push(qualB.ja); enBlocks.push(qualB.en); }
+
+    // portrait / SNS reference-photo instruction sentences (appended after the main prompt)
+    const jaSentences = [], enSentences = [];
+
+    // Always enforce headroom so the top of the head/hair is never cropped or touching the frame edge (a common failure with wide aspect ratios like 16:9).
+    // Framed as a concrete subject-scale constraint (head height as a % of frame) rather than a vague "leave margin" request, since models tend to honor scale constraints more reliably than margin requests.
+    // Placed at the very FRONT of the output (not appended at the end) so it is not buried under everything else and gets read as the top-priority instruction.
+    const isExtremeCloseUp = state.composition === "クローズアップ（顔を画面いっぱいに大きく）";
+    const headroomJa = isExtremeCloseUp
+      ? "【最優先】この構図は、顔と髪型全体を画面いっぱいに大きく写すクローズアップです。頭頂部・髪の生え際を含めた頭部全体（髪型全体）は必ず画面内に収め、切らないでください。その代わり、鎖骨や肩など画面下側は多少見えなくなったり切れたりして構いません。肩から下・服装・小物・背景など、この後の指示に含まれる要素も、ほとんど見えなくなったり画面外に切れたりして構いません（むしろそれが正解です）。他の指示につられて引きの構図にせず、顔と髪だけで画面が埋まるくらい大胆にズームしてください。目・眉・口などの主要な顔のパーツが不自然に切れないよう、顔全体のバランスは保ってください。"
+      : "【最優先】被写体は画面いっぱいに寄った構図にせず、頭部（髪の毛の生え際・後れ毛・アホ毛まで含む）の高さが画面全体の高さの40%以下に収まる、少し引いた構図にしてください。頭頂部や髪の毛が画面の上端に接したり、はみ出したり、切れて見切れたりすることは厳禁です。服装や背景など画面に全てを収めきれない場合は、頭部を切るのではなく、鎖骨や肩など体の下側を切ってバランスを取ってください。";
+    const headroomEn = isExtremeCloseUp
+      ? "TOP PRIORITY: This composition is a close-up that fills nearly the entire frame with the face and full hairstyle. Keep the entire head — including the top of the head and the hairline — fully within frame; do not crop the hair. Instead, it is fine for the bottom of the frame to crop into the collarbone or shoulders. Elements described elsewhere in this prompt — clothing, accessories, background — may also end up mostly or entirely cropped out of frame; that is expected and correct, not a mistake. Do not let those other instructions pull the shot back into a wider composition: zoom in boldly enough that the face and hair fill the frame. Keep the balance of the face natural and do not awkwardly cut through key features like the eyes, eyebrows, or mouth."
+      : "TOP PRIORITY: Do not frame the subject as a tight, face-filling close-up. Compose the shot slightly zoomed out so the head (including the hairline, loose strands, and any flyaway hair) occupies no more than about 40% of the total frame height. The top of the head or hair must never touch, extend beyond, or be cropped by the top edge of the frame. If the clothing, background, or other described elements cannot all fit within the frame, crop into the lower body — the collarbone or shoulders — rather than the head.";
+
+    if (faceRefChoice && faceRefChoice !== "参照画像を使わない") {
+      const fr = FACE_REF_OPTIONS.find(o => o.ja === faceRefChoice);
+      let jaS, enS;
+      if (faceRefChoice === "写真の顔をそのまま使う") {
+        jaS = "添付した参照写真の顔立ちを、できるだけそのまま活かしてください";
+        enS = `Using the attached reference photo, ${fr.en}`;
+      } else if (faceRefChoice === "本人に似せたイラストにする") {
+        jaS = "添付した参照写真をもとに、本人と分かる似顔でありながらファッショナブルなイラストとして描き直してください。頭の角度・視線・ポーズは参照写真をそのままコピーせず、この作品の世界観に合わせて自由に変えて構いません";
+        enS = `Using the attached reference photo, redraw ${fr.en}`;
+      } else {
+        jaS = "添付した参照写真は、忠実に似せるのではなく全体の雰囲気だけを参考にしてください";
+        enS = `Using the attached reference photo, aim for ${fr.en}`;
+      }
+      if (selectedFeatures.size) {
+        const fts = Array.from(selectedFeatures);
+        jaS += `、${fts.join("、")}を意識して`;
+        enS += ", with " + fts.map(ja => FEATURES.find(f => f.ja === ja).en).join(", ");
+      }
+      if (selectedMoods.size) {
+        const idxs = Array.from(selectedMoods);
+        jaS += "、" + idxs.map(i => MOODS[i].jaPhrase).join("、") + "を意識して";
+        enS += ", with " + idxs.map(i => MOODS[i].en).join(", ");
+      }
+      const features = portraitFeaturesInput.value.trim();
+      if (features) { jaS += `、${features}を取り入れて`; enS += `, featuring ${features}`; }
+      if (faceRefChoice !== "雰囲気だけ") {
+        jaS += "、本人と分かる顔の特徴は保ってください。";
+        enS += ", while keeping their distinguishing facial features recognizable.";
+      } else {
+        jaS += "。"; enS += ".";
+      }
+      jaSentences.push(jaS); enSentences.push(enS);
+    }
+
+    const catchCopy = catchCopyInput.value.trim();
+    const subText = subTextInput.value.trim();
+    if (catchCopy || subText) {
+      const mainText = catchCopy || subText;
+      const secondaryText = catchCopy ? subText : "";
+      const styleObj = selectedTextStyle ? TEXT_STYLES.find(o => o.ja === selectedTextStyle) : null;
+      let jaS = `「${mainText}」という文字を${styleObj ? styleObj.ja + "で" : "品よく"}画面内にタイポグラフィとして配置してください`;
+      let enS = `Incorporate the text "${mainText}" into the composition${styleObj ? ", " + styleObj.en : ", as an elegant, well-composed typographic element"}`;
+      if (secondaryText) { jaS += `。あわせて「${secondaryText}」という一文も添えて`; enS += `, paired with the smaller accompanying line "${secondaryText}"`; }
+      jaS += "。"; enS += ".";
+      jaSentences.push(jaS); enSentences.push(enS);
+    }
+
+    if (snsOn) {
+      let jaS = "2枚目の参考画像として、本人のSNSプロフィール欄のスクリーンショットも添付しています。ブランドイメージの参考にし";
+      let enS = "A second reference image showing the person's SNS profile screenshot is also attached; use it as a reference for their brand identity";
+      const snsText = snsTextInput.value.trim();
+      if (snsText) {
+        jaS += `、そこに書かれている次のテキスト情報を作品のタイポグラフィやスタイリングに反映してください：「${snsText}」`;
+        enS += `, incorporating the following text/brand information into the artwork's typography and styling: "${snsText}"`;
+      } else {
+        jaS += "、画像内に見えるプロフィール文・キャッチコピー・ブランド名などをタイポグラフィやスタイリングに反映してください";
+        enS += ", incorporating any bio text, tagline, or brand name visible in it into the artwork's typography and styling";
+      }
+      jaS += "。"; enS += ".";
+      jaSentences.push(jaS); enSentences.push(enS);
+    }
+
+    const outJa = document.getElementById("outputJa");
+    const outEn = document.getElementById("outputEn");
+    const mainJa = jaBlocks.join(", ");
+    const mainEn = enBlocks.join(", ");
+    const restJa = jaSentences.length ? (mainJa ? `${mainJa}。 ${jaSentences.join(" ")}` : jaSentences.join(" ")) : mainJa;
+    const restEn = enSentences.length ? (mainEn ? `${mainEn}. ${enSentences.join(" ")}` : enSentences.join(" ")) : mainEn;
+    outJa.value = restJa ? `${headroomJa} ${restJa}` : headroomJa;
+    outEn.value = restEn ? `${headroomEn} ${restEn}` : headroomEn;
+    document.getElementById("charCountJa").textContent = `${outJa.value.length} chars`;
+    document.getElementById("charCountEn").textContent = `${outEn.value.length} chars`;
+
+    // base type summary
+    const parts = [];
+    if (diag.face) parts.push(`顔タイプ：<b>${FACE_TYPES.find(t=>t.code===diag.face).ja}</b>`);
+    if (diag.season) parts.push(`パーソナルカラー：<b>${SEASON_TYPES.find(t=>t.code===diag.season).ja}</b>`);
+    if (diag.body) parts.push(`骨格：<b>${BODY_TYPES.find(t=>t.code===diag.body).ja}</b>`);
+    document.getElementById("baseTypeSummary").innerHTML = parts.length ? parts.join("　／　") : "タイプ未選択（絞り込みなしで全件表示中）";
+  }
+
+  /* =========================================================
+     Copy / random / reset
+  ========================================================= */
+  async function copyText(id, toast) {
+    const el = document.getElementById(id);
+    if (!el.value) return;
+    try { await navigator.clipboard.writeText(el.value); }
+    catch (e) { el.select(); document.execCommand("copy"); }
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1400);
+  }
+  const toast = document.getElementById("copyToast");
+  document.getElementById("copyJaBtn").addEventListener("click", () => copyText("outputJa", toast));
+  document.getElementById("copyEnBtn").addEventListener("click", () => copyText("outputEn", toast));
+
+  document.getElementById("randomBtn").addEventListener("click", () => {
+    // random pick per FIELD (not per DOM grid), so grouped fields like 髪型 pick across all sub-groups evenly
+    SECTIONS.forEach(sec => sec.fields.forEach(field => randomizeField(field)));
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+    SECTIONS.forEach(sec => sec.fields.forEach(field => { state[field.key] = field.multi ? new Set() : null; }));
+    diag.face = null; diag.season = null; diag.body = null;
+    filterOn = true;
+    filterSwitch.setAttribute("aria-checked", "true");
+    selectedMoods.clear();
+    portraitFeaturesInput.value = "";
+    snsTextInput.value = "";
+    faceRefChoice = null;
+    selectedFeatures.clear();
+    catchCopyInput.value = "";
+    subTextInput.value = "";
+    selectedTextStyle = null;
+    setSns(false);
+    resetClothingFree();
+    applyFilters();
+    update();
+  });
+
+  applyFilters();
+  update();
+})();
+</script>
+</body>
+</html>
